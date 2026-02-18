@@ -80,7 +80,7 @@ def trainRobustHead(model, dataloader, gradient_accumulation_steps, n_epochs, lr
     print_number_of_trainable_model_parameters(model)
 
     optimizer = torch.optim.AdamW(
-        model.robust_head.parameters(),
+        model.robust_head.parameters(),  #
         lr=lr
     )
 
@@ -94,10 +94,9 @@ def trainRobustHead(model, dataloader, gradient_accumulation_steps, n_epochs, lr
     steps = 0
 
     for epoch in range(n_epochs):
-        total_loss = 0
-        total_count = 0
-
-        pbar = tqdm(dataloader, desc=f'Robust Epoch {epoch+1}/{n_epochs}')
+        total_loss, total_count = 0, 0  #
+        
+        pbar = tqdm(dataloader, desc=f'Robust Epoch {epoch+1}/{n_epochs}')  #
 
         for i_th, batch_i in enumerate(pbar):
             steps += 1
@@ -174,7 +173,7 @@ if __name__ == '__main__':
     # Freeze everything except robust head
     print("*" * 10 + "Start training Robust Head" + "*" * 10)
     model.set_train_only_robust_head()
-    model.train()
+    model.train()  #
 
     trainRobustHead(
         model,
@@ -185,5 +184,5 @@ if __name__ == '__main__':
     )
 
     # Save only robust head
-    torch.save(model.robust_head.state_dict(), save_path)
+    torch.save(model.robust_head.state_dict(), save_path)  #
     print(f"Robust head saved to {save_path}")

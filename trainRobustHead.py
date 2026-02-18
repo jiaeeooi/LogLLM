@@ -14,7 +14,7 @@ from customDataset import CustomDataset, CustomCollator, BalancedSampler
 # Hyperparameters
 # ===============================
 
-dataset_name = 'Liberty'
+dataset_name = 'BGL'
 batch_size = 16
 micro_batch_size = 4
 gradient_accumulation_steps = batch_size // micro_batch_size
@@ -26,20 +26,24 @@ max_content_len = 100
 max_seq_len = 128
 min_less_portion = 0.3
 
-data_path = f'/mnt/public/gw/SyslogData/{dataset_name}/train.csv'
-Bert_path = "/mnt/public/gw/LLM_model/bert-base-uncased"
-Llama_path = "/mnt/public/gw/LLM_model/Meta-Llama-3-8B"
+data_path = r'/content/data/{}/train.csv'.format(dataset_name)
+Bert_path = "bert-base-uncased"
+Llama_path = "meta-llama/Meta-Llama-3-8B"
 
 device = torch.device("cuda:0")
 
 ROOT_DIR = Path(__file__).parent
 save_path = os.path.join(ROOT_DIR, f"robust_head_{dataset_name}.pt")
 
-print(f'dataset_name: {dataset_name}')
-print(f'batch_size: {batch_size}')
-print(f'n_epochs_robust: {n_epochs_robust}')
-print(f'lr_robust: {lr_robust}')
-print(f'device: {device}')
+print(f'n_epochs_robust: {n_epochs_robust}\n'
+f'dataset_name: {dataset_name}\n'
+f'batch_size: {batch_size}\n'
+f'micro_batch_size: {micro_batch_size}\n'
+f'lr_robust: {lr_robust}\n'
+f'max_content_len: {max_content_len}\n'
+f'max_seq_len: {max_seq_len}\n'
+f'min_less_portion: {min_less_portion}\n'
+f'device: {device}')
 
 
 # ===============================
@@ -64,8 +68,7 @@ def print_number_of_trainable_model_parameters(model):
         if param.requires_grad:
             trainable_model_params += param.numel()
 
-    print(f"all params num: {all_model_params}, "
-          f"trainable param num: {trainable_model_params}")
+    print(f"all params num: {all_model_params}, trainable param num: {trainable_model_params}")
 
 
 # ===============================

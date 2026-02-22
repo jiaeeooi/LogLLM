@@ -63,6 +63,7 @@ def merge_data(data):
 
     return merged_data, start_positions
 
+
 class RobustDataset(Dataset):
     def __init__(self, file_path, drop_duplicates=False):
         df = pd.read_csv(file_path)
@@ -91,6 +92,68 @@ class RobustDataset(Dataset):
 
     def get_label(self):
         return self.labels
+
+
+class BalancedSampler(Sampler):
+    def __init__(self, dataset, target_ratio=0.3, max_samples=None, min_samples=50000):
+        self.labels = dataset.get_label()
+        self.dataset = dataset
+        self.target_ratio = target_ratio
+        self.max_samples = max_samples
+        self.min_samples = min_samples  # only if max_samples is None, min_samples can work
+
+        self.normal_indices = np.where(self.labels == 0)[0]
+        self.anomalous_indices = np.where(self.labels == 1)[0]
+
+        self.minority_indices = (
+            self.anomalous_indices if len(self.anomalous_indices) < len(self.normal_indices)
+            else self.normal_indices
+        )
+        self.majority_indices = (
+            self.normal_indices if self.minority_indices is self.anomalous_indices
+            else self.anomalous_indices
+        )
+
+        self.minority_count = max(int((self.target_ratio * len(self.majority_indices)) / (1 - self.target_ratio)), len(self.minority_indices))
+        self.total_size = self.minority_count + len(self.majority_indices)
+
+        if self.max_samples is not None:
+            if self.max_samples > self.total_size:
+                raise ValueError(
+            f"The hyperparameter 'max_samples' should smaller than the samples in the dataset.")
+            self.total_size = self.max_samples
+
+        elif self.total_size < self.min_samples:
+            self.total_size = self.min_samples
+
+
+    def __iter__(self):
+        oversampled_minority = np.tile(self.minority_indices, int(self.minority_count / len(self.minority_indices)))
+        oversampled_minority_ = np.random.choice(
+            self.minority_indices,
+            self.minority_count - len(oversampled_minority),
+            replace=False
+        )
+        combined_indices = np.concatenate([self.majority_indices, oversampled_minority, oversampled_minority_])
+        if len(combined_indices) > self.total_size:
+            combined_indices = np.random.choice(
+                combined_indices,
+                self.total_size,
+                replace=False
+            )
+        else:
+            combined_indices = np.tile(combined_indices, int(self.total_size/len(combined_indices)))
+            combined_indices_ = np.random.choice(
+                combined_indices,
+                self.total_size-len(combined_indices),
+                replace=False
+            )
+            combined_indices = np.concatenate([combined_indices, combined_indices_])
+            np.random.shuffle(combined_indices)
+        return iter(combined_indices)
+
+    def __len__(self):
+        return self.total_size
 
 
 class RobustCollator:

@@ -7,7 +7,7 @@ import torch.nn.functional as F
 from torch.utils.data import DataLoader
 
 from model import LogLLM
-from customDataset import CustomDataset, CustomCollator, BalancedSampler
+from robustDataset import RobustDataset, RobustCollator, BalancedSampler
 
 
 # ===============================
@@ -103,6 +103,8 @@ def trainRobustHead(model, dataloader, gradient_accumulation_steps, n_epochs, lr
 
             inputs = batch_i['inputs'].to(device)
             para_inputs = batch_i['para_inputs'].to(device)
+            #inputs = {k: v.to(device) for k, v in batch_i['inputs'].items()}
+            #para_inputs = {k: v.to(device) for k, v in batch_i['para_inputs'].items()}
 
             # Forward
             z_orig = model.encode_with_robust_head(inputs)
@@ -144,7 +146,7 @@ if __name__ == '__main__':
 
     print(f'dataset: {data_path}')
 
-    dataset = CustomDataset(data_path, drop_duplicates=False)
+    dataset = RobustDataset(data_path, drop_duplicates=False)
 
     model = LogLLM(
         Bert_path,
@@ -155,7 +157,7 @@ if __name__ == '__main__':
     )
 
     tokenizer = model.Bert_tokenizer
-    collator = CustomCollator(
+    collator = RobustCollator(
         tokenizer,
         max_seq_len=max_seq_len,
         max_content_len=max_content_len

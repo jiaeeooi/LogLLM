@@ -1,0 +1,175 @@
+import numpy as np
+import pandas as pd
+from torch.utils.data import Dataset
+import re
+from torch.utils.data import Sampler
+import torch
+from typing import List, Tuple
+import os
+os.environ["TOKENIZERS_PARALLELISM"] = "false"
+#
+# patterns = [
+#     r'[a-zA-Z0-9]*:*([/\\]+[^/\\\s]+)+[/\\]*',  # 文件路径
+#     r'[a-zA-Z\.\:\-\_]*\d[a-zA-Z0-9\.\:\-\_]*',  # 中间一定要有数字  数字和字母和 . 或 : 或 - 的组合
+#     # r'[a-zA-Z0-9]+\.[a-zA-Z0-9]+',
+# ]
+#
+# # 合并所有模式
+# combined_pattern = '|'.join(patterns)
+#
+# # 替换函数
+# def replace_patterns(text):
+#     return re.sub(combined_pattern, '<*>', text)
+
+patterns = [
+    r'True',
+    r'true',
+    r'False',
+    r'false',
+    r'\b(zero|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen|fifteen|sixteen|seventeen|eighteen|nineteen|twenty|thirty|forty|fifty|sixty|seventy|eighty|ninety|hundred|thousand|million|billion)\b',
+    r'\b(Mon|Monday|Tue|Tuesday|Wed|Wednesday|Thu|Thursday|Fri|Friday|Sat|Saturday|Sun|Sunday)\b',
+    r'\b(Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|Jun(?:e)?|Jul(?:y)?|Aug(?:ust)?|Sep(?:tember)?|Oct(?:ober)?|Nov(?:ember)?|Dec(?:ember)?)\s+(\d{1,2})\s+\b',
+    r'\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}(:\d{1,5})?', #  IP
+    r'([0-9A-Fa-f]{2}:){11}[0-9A-Fa-f]{2}',   # Special MAC
+    r'([0-9A-Fa-f]{2}:){5}[0-9A-Fa-f]{2}',   # MAC
+    r'[a-zA-Z0-9]*[:\.]*([/\\]+[^/\\\s\[\]]+)+[/\\]*',  # File Path
+    r'\b[0-9a-fA-F]{8}\b',
+    r'\b[0-9a-fA-F]{10}\b',
+    r'(\w+[\w\.]*)@(\w+[\w\.]*)\-(\w+[\w\.]*)',
+    r'(\w+[\w\.]*)@(\w+[\w\.]*)',
+    r'[a-zA-Z\.\:\-\_]*\d[a-zA-Z0-9\.\:\-\_]*',  # word have number
+]
+
+# 合并所有模式
+combined_pattern = '|'.join(patterns)
+
+# 替换函数
+def replace_patterns(text):
+    text = re.sub(r'[\.]{3,}', '.. ', text)    # Replace multiple '.' with '.. '
+    text = re.sub(combined_pattern, '<*>', text)
+    return text
+
+def merge_data(data):
+    merged_data = []
+
+    # 记录每个子列表的开始位置
+    start_positions = []
+
+    current_position = 0
+    for sublist in data:
+        start_positions.append(current_position)
+        merged_data.extend(sublist)
+        current_position += len(sublist)
+
+    return merged_data, start_positions
+
+class RobustDataset(Dataset):
+    def __init__(self, file_path, drop_duplicates=False):
+        df = pd.read_csv(file_path)
+        print('Number of normal samples in original dataset: {}'.format((df['Label'].values==0).sum()))
+        print('Number of anomalous samples in original dataset: {}'.format((df['Label'].values==1).sum()))
+        df['Content'] = df['Content'].apply(replace_patterns)
+        df['ParaContent'] = df['ParaContent'].apply(replace_patterns)
+        if drop_duplicates:
+            df = df.drop_duplicates(subset='Content', keep='first')
+        self.sequences = np.array([content.split(' ;-; ') for content in df['Content'].values], dtype=object)
+        self.para_sequences = np.array([content.split(' ;-; ') for content in df['ParaContent'].values], dtype=object)
+        self.labels = df['Label'].values
+        if drop_duplicates:
+            print('Number of normal samples after dropping duplicates: {}'.format((self.labels==0).sum()))
+            print('Number of anomalous samples after dropping duplicates: {}'.format((self.labels==1).sum()))
+
+    def __len__(self):
+        return len(self.labels)
+
+    def __getitem__(self, idx) -> Tuple[List[str], List[str], int]:
+        return (
+            self.sequences[idx],      # original window
+            self.para_sequences[idx], # paraphrased window
+            self.labels[idx]
+        )
+
+    def get_label(self):
+        return self.labels
+
+
+class RobustCollator:
+      """
+      Tokenizes both original and paraphrased logs.
+      Returns:
+          {
+              "inputs": original_tokenized,
+              "para_inputs": paraphrased_tokenized,
+              "seq_positions": tensor,
+              "labels": labels
+          }
+      """ 
+      def __init__(self, tokenizer, max_seq_len=128, max_content_len=100):
+          self.tokenizer = tokenizer
+          self.max_seq_len = max_seq_len
+          self.max_content_len = max_content_len
+
+      def __call__(self, batch):
+          sequences_, para_sequences_, labels = zip(*batch)
+
+          sequences = [seq[:self.max_seq_len] for seq in sequences_]
+          para_sequences = [seq[:self.max_seq_len] for seq in para_sequences_]
+
+          # Merge original
+          data, seq_positions = merge_data(sequences)
+          seq_positions = seq_positions[1:]
+
+          inputs = self.tokenizer(
+              data,
+              return_tensors="pt",
+              max_length=self.max_content_len,
+              padding=True,
+              truncation=True
+          )
+
+          # Merge paraphrased
+          para_data, _ = merge_data(para_sequences)
+
+          para_inputs = self.tokenizer(
+              para_data,
+              return_tensors="pt",
+              max_length=self.max_content_len,
+              padding=True,
+              truncation=True
+          )
+
+          labels = np.array(labels).astype(object)
+          labels[labels == 0] = 'normal'
+          labels[labels == 1] = 'anomalous'
+
+          return {
+              "inputs": inputs,
+              "para_inputs": para_inputs,
+              "seq_positions": torch.tensor(seq_positions, dtype=torch.long),
+              "labels": labels
+          }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

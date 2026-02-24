@@ -192,20 +192,3 @@ if __name__ == '__main__':
     # Save only robust head
     torch.save(model.robust_head.state_dict(), robust_path)  #
     print(f"Robust head saved to {robust_path}")
-
-
-
-    '''
-    def save_ft_model(self, path):
-        if not os.path.exists(path):
-            os.makedirs(path)
-        Llama_ft_path = os.path.join(path,'Llama_ft')
-        Bert_ft_path = os.path.join(path,'Bert_ft')
-        projector_path = os.path.join(path,'projector.pt')
-        self.Llama_model.save_pretrained(Llama_ft_path, safe_serialization = True)
-        self.Bert_model.save_pretrained(Bert_ft_path, safe_serialization =True)
-        torch.save(self.projector.state_dict(), projector_path)
-
-
-    model.save_ft_model(ft_path)     
-    ''' 

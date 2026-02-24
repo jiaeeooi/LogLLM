@@ -33,7 +33,11 @@ Llama_path = "meta-llama/Meta-Llama-3-8B"
 device = torch.device("cuda:0")
 
 ROOT_DIR = Path(__file__).parent
-save_path = os.path.join(ROOT_DIR, f"robust_head_{dataset_name}.pt")
+ft_path = os.path.join(ROOT_DIR, r"ft_model_{}".format(dataset_name))
+robust_path = os.path.join(ft_path, 'robust.pt')
+
+
+
 
 print(f'n_epochs_robust: {n_epochs_robust}\n'
 f'dataset_name: {dataset_name}\n'
@@ -151,6 +155,7 @@ if __name__ == '__main__':
     model = LogLLM(
         Bert_path,
         Llama_path,
+        ft_path=ft_path,
         device=device,
         max_content_len=max_content_len,
         max_seq_len=max_seq_len
@@ -186,5 +191,21 @@ if __name__ == '__main__':
     )
 
     # Save only robust head
-    torch.save(model.robust_head.state_dict(), save_path)  #
-    print(f"Robust head saved to {save_path}")
+    torch.save(model.robust_head.state_dict(), robust_path)  #
+    print(f"Robust head saved to {robust_path}")
+
+
+
+
+    def save_ft_model(self, path):
+        if not os.path.exists(path):
+            os.makedirs(path)
+        Llama_ft_path = os.path.join(path,'Llama_ft')
+        Bert_ft_path = os.path.join(path,'Bert_ft')
+        projector_path = os.path.join(path,'projector.pt')
+        self.Llama_model.save_pretrained(Llama_ft_path, safe_serialization = True)
+        self.Bert_model.save_pretrained(Bert_ft_path, safe_serialization =True)
+        torch.save(self.projector.state_dict(), projector_path)
+
+
+    model.save_ft_model(ft_path)

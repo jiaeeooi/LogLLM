@@ -99,13 +99,6 @@ class LogLLM(nn.Module):
         self.Bert_model = BertModel.from_pretrained(Bert_path, quantization_config=bnb_config, low_cpu_mem_usage=True,
                                                device_map=device)
 
-        # NEW: robust head
-        self.robust_head = nn.Sequential(
-          nn.Linear(self.Bert_model.config.hidden_size, 512),
-          nn.ReLU(),
-          nn.Linear(512, self.Bert_model.config.hidden_size),
-        ).to(device)
-
         self.projector = nn.Linear(self.Bert_model.config.hidden_size, self.Llama_model.config.hidden_size, device=device)
         # self.projector = nn.Linear(self.Bert_model.config.hidden_size, self.Llama_model.config.hidden_size).half().to(device)
 
@@ -202,17 +195,6 @@ class LogLLM(nn.Module):
                 param.requires_grad = True
 
 
-    def set_train_only_robust_head(self):
-        for p in self.robust_head.parameters():
-            p.requires_grad = True
-        for p in self.projector.parameters():
-            p.requires_grad = False
-        for p in self.Bert_model.parameters():
-            p.requires_grad = False
-        for p in self.Llama_model.parameters():
-            p.requires_grad = False
-
-
     def train_helper(self, inputs, seq_positions, labels):
         '''
         :param inputs: the tokenized Sequences for BERT. Sequences are concatenated.
@@ -225,7 +207,6 @@ class LogLLM(nn.Module):
 
         outputs = self.Bert_model(**inputs).pooler_output  # dim = 768
         outputs = outputs.float()
-        outputs = self.robust_head(outputs) # NEW: apply robustness head
         outputs = self.projector(outputs)
         outputs = outputs.half()
 
@@ -283,7 +264,6 @@ class LogLLM(nn.Module):
 
         outputs = self.Bert_model(**inputs).pooler_output  # dim = 768
         outputs = outputs.float()
-        outputs = self.robust_head(outputs) # NEW: apply robustness head
         outputs = self.projector(outputs)
         outputs = outputs.half()
 
@@ -376,9 +356,3 @@ class LogLLM(nn.Module):
                 this_peer_finished = True
 
         return torch.stack(answer,dim=1)
-
-    def encode_with_robust_head(self, inputs):
-        with torch.no_grad():
-            h = self.Bert_model(**inputs).pooler_output.float()
-        z = self.robust_head(h)
-        return z

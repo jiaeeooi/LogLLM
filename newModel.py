@@ -122,6 +122,7 @@ class LogLLM(nn.Module):
             Llama_ft_path = os.path.join(ft_path, 'Llama_ft')
             Bert_ft_path = os.path.join(ft_path, 'Bert_ft')
             projector_path = os.path.join(ft_path, 'projector.pt')
+            robust_path = os.path.join(ft_path, 'robust.pt')  #
             self.Llama_model = PeftModel.from_pretrained(
                 self.Llama_model,
                 Llama_ft_path,
@@ -135,6 +136,8 @@ class LogLLM(nn.Module):
                 torch_dtype=torch.float16,
             )
             self.projector.load_state_dict(torch.load(projector_path, map_location=device, weights_only=True))
+            if os.path.exists(robust_path):
+                self.robust_head.load_state_dict(torch.load(robust_path, map_location=device, weights_only=True))
         else:
             print(f'Creating peft model.')
             Bert_peft_config = LoraConfig(task_type=TaskType.FEATURE_EXTRACTION,

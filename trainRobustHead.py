@@ -6,9 +6,8 @@ from torch import optim
 import torch.nn.functional as F
 from torch.utils.data import DataLoader
 
-from model import LogLLM
+from newModel import LogLLM
 from robustDataset import RobustDataset, RobustCollator, BalancedSampler
-
 
 # ===============================
 # Hyperparameters
@@ -196,7 +195,7 @@ if __name__ == '__main__':
 
 
 
-
+    '''
     def save_ft_model(self, path):
         if not os.path.exists(path):
             os.makedirs(path)
@@ -208,4 +207,5 @@ if __name__ == '__main__':
         torch.save(self.projector.state_dict(), projector_path)
 
 
-    model.save_ft_model(ft_path)
+    model.save_ft_model(ft_path)     
+    ''' 

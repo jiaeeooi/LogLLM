@@ -356,4 +356,3 @@ class LogLLM(nn.Module):
                 this_peer_finished = True
 
         return torch.stack(answer,dim=1)
-        

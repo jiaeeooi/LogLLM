@@ -201,9 +201,12 @@ class RobustCollator:
               truncation=True
           )
 
+          labels = torch.tensor(labels, dtype=torch.long)
+          '''
           labels = np.array(labels).astype(object)
           labels[labels == 0] = 'normal'
           labels[labels == 1] = 'anomalous'
+          '''
 
           return {
               "inputs": inputs,
@@ -211,28 +214,3 @@ class RobustCollator:
               "seq_positions": torch.tensor(seq_positions, dtype=torch.long),
               "labels": labels
           }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

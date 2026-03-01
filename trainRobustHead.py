@@ -53,7 +53,7 @@ f'device: {device}')
 # Loss
 # ===============================
 
-def invariance_loss(z1, z2):
+def calculate_loss(z1, z2, temperature=0.07):
     z1 = F.normalize(z1, dim=1)
     z2 = F.normalize(z2, dim=1)
     return 1 - (z1 * z2).sum(dim=1).mean()
@@ -113,7 +113,7 @@ def trainRobustHead(model, dataloader, gradient_accumulation_steps, n_epochs, lr
             z_orig = model.encode_with_robust_head(inputs)
             z_para = model.encode_with_robust_head(para_inputs)
 
-            loss = invariance_loss(z_orig, z_para)
+            loss = calculate_loss(z_orig, z_para)
             loss = loss / gradient_accumulation_steps
 
             loss.backward()

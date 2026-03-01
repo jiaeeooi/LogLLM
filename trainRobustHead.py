@@ -53,7 +53,7 @@ f'device: {device}')
 # Loss
 # ===============================
 
-def calculate_loss(z1, z2, temperature=0.07):
+def simclr_loss(z1, z2, temperature=0.07):
 
     B = z1.size(0)
 
@@ -70,6 +70,43 @@ def calculate_loss(z1, z2, temperature=0.07):
     ]).to(z.device)
 
     loss = F.cross_entropy(sim, positives)
+    return loss
+
+# ===============================
+# VICReg Loss
+# ===============================
+
+def vicreg_loss(z1, z2, sim_coeff=25.0, std_coeff=25.0, cov_coeff=1.0, eps=1e-4):
+    """
+    VICReg loss:
+    - sim_coeff: invariance weight
+    - std_coeff: variance weight
+    - cov_coeff: covariance weight
+    """
+    # Invariance loss
+    invariance_loss = F.mse_loss(z1, z2) 
+
+    # Variance loss
+    def variance_loss(z):  
+        std = torch.sqrt(z.var(dim=0) + eps)
+        return torch.mean(F.relu(1 - std))
+    var_loss = variance_loss(z1) + variance_loss(z2)
+
+    # Covariance loss
+    def covariance_loss(z):
+        B, D = z.size()
+        z = z - z.mean(dim=0)
+        cov = (z.T @ z) / (B - 1)
+        off_diag = cov - torch.diag(torch.diag(cov))
+        return (off_diag ** 2).sum() / D
+    cov_loss = covariance_loss(z1) + covariance_loss(z2)
+
+    # Final weighted sum
+    loss = (
+        sim_coeff * invariance_loss
+        + std_coeff * var_loss
+        + cov_coeff * cov_loss
+    )
     return loss
 
 
@@ -127,7 +164,7 @@ def trainRobustHead(model, dataloader, gradient_accumulation_steps, n_epochs, lr
             z_orig = model.encode_with_robust_head(inputs)
             z_para = model.encode_with_robust_head(para_inputs)
 
-            loss = calculate_loss(z_orig, z_para)
+            loss = vicreg_loss(z_orig, z_para)
             loss = loss / gradient_accumulation_steps
 
             loss.backward()

@@ -54,9 +54,23 @@ f'device: {device}')
 # ===============================
 
 def calculate_loss(z1, z2, temperature=0.07):
+
+    B = z1.size(0)
+
     z1 = F.normalize(z1, dim=1)
     z2 = F.normalize(z2, dim=1)
-    return 1 - (z1 * z2).sum(dim=1).mean()
+
+    z = torch.cat([z1, z2], dim=0)
+    sim = torch.matmul(z, z.T) / temperature
+    mask = torch.eye(2 * B, device=z.device).bool()
+    sim.masked_fill_(mask, -9e15)
+    positives = torch.cat([
+        torch.arange(B, 2*B),
+        torch.arange(0, B)
+    ]).to(z.device)
+
+    loss = F.cross_entropy(sim, positives)
+    return loss
 
 
 # ===============================

@@ -39,7 +39,7 @@ def paraphrase_log(log_text):
 
     prompt = "paraphrase: " + log_text + " </s>"
 
-    encoding = tokenizer.encode_plus(
+    encoding = tokenizer(
         prompt,
         padding="longest",
         return_tensors="pt",
@@ -63,6 +63,10 @@ def paraphrase_log(log_text):
 
     paraphrase = tokenizer.decode(outputs[0], skip_special_tokens=True)
 
+    print("ORIGINAL:", log_text)
+    print("PARAPHRASE:", paraphrase)
+    print()
+
     return paraphrase
 
 
@@ -79,10 +83,7 @@ def paraphrase_window(row):
     for log, label in zip(logs, labels):
 
         if label == 1:
-            try:
-                new_log = paraphrase_log(log)
-            except:
-                new_log = log
+            new_log = paraphrase_log(log)
         else:
             new_log = log
 

@@ -57,15 +57,14 @@ def paraphrase_log(log_text):
         do_sample=True,
         top_k=120,
         top_p=0.95,
-        num_return_sequences=1,
-        early_stopping=True
+        num_return_sequences=1
     )
 
     paraphrase = tokenizer.decode(outputs[0], skip_special_tokens=True)
 
-    print("ORIGINAL:", log_text)
-    print("PARAPHRASE:", paraphrase)
-    print()
+    #print("ORIGINAL:", log_text)
+    #print("PARAPHRASE:", paraphrase)
+    #print()
 
     return paraphrase
 

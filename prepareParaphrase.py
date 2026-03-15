@@ -1,4 +1,50 @@
 # ==============================
+# Imports
+# ==============================
+import pandas as pd
+import ast
+import torch
+import argparse
+from transformers import AutoTokenizer, AutoModelForSeq2SeqLM
+from tqdm import tqdm
+
+
+# ==============================
+# Arguments
+# ==============================
+parser = argparse.ArgumentParser()
+parser.add_argument("--input", type=str, required=True)
+parser.add_argument("--output", type=str, required=True)
+args = parser.parse_args()
+
+
+# ==============================
+# Load Model
+# ==============================
+model_name = "Vamsi/T5_Paraphrase_Paws"
+
+print("Loading model...")
+
+tokenizer = AutoTokenizer.from_pretrained(model_name)
+model = AutoModelForSeq2SeqLM.from_pretrained(model_name)
+
+device = "cuda" if torch.cuda.is_available() else "cpu"
+model = model.to(device)
+
+print("Using device:", device)
+
+
+# ==============================
+# Load Dataset
+# ==============================
+print("Loading dataset...")
+
+df = pd.read_csv(args.input)
+
+print("Dataset size:", len(df))
+
+
+# ==============================
 # Step 1: Collect anomalous logs
 # ==============================
 print("Collecting anomalous logs...")

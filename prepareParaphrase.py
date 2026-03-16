@@ -90,8 +90,9 @@ for i in tqdm(range(0, len(all_logs), batch_size)):
         **encoding,
         max_length=64,
         do_sample=True,
-        top_k=120,
-        top_p=0.95
+        temperature=1.7,
+        top_k=50,
+        top_p=0.85
     )
 
     decoded = tokenizer.batch_decode(outputs, skip_special_tokens=True)

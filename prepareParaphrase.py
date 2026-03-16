@@ -1,32 +1,25 @@
-# ==============================
-# Imports
-# ==============================
+import argparse
 import pandas as pd
 import ast
 import torch
-import argparse
-from transformers import AutoTokenizer, AutoModelForSeq2SeqLM
 from tqdm import tqdm
+from transformers import AutoTokenizer, AutoModelForSeq2SeqLM
 
+# -------------------------------
+# Config
+# -------------------------------
 
-# ==============================
-# Arguments
-# ==============================
-parser = argparse.ArgumentParser()
-parser.add_argument("--input", type=str, required=True)
-parser.add_argument("--output", type=str, required=True)
-args = parser.parse_args()
+MODEL_NAME = "google/flan-t5-base"
+BATCH_SIZE = 32
 
+# -------------------------------
+# Load model
+# -------------------------------
 
-# ==============================
-# Load Model
-# ==============================
-model_name = "Vamsi/T5_Paraphrase_Paws"
+print("Loading FLAN-T5 model...")
 
-print("Loading model...")
-
-tokenizer = AutoTokenizer.from_pretrained(model_name)
-model = AutoModelForSeq2SeqLM.from_pretrained(model_name)
+tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME)
+model = AutoModelForSeq2SeqLM.from_pretrained(MODEL_NAME)
 
 device = "cuda" if torch.cuda.is_available() else "cpu"
 model = model.to(device)
@@ -34,52 +27,37 @@ model = model.to(device)
 print("Using device:", device)
 
 
-# ==============================
-# Load Dataset
-# ==============================
-print("Loading dataset...")
+# -------------------------------
+# Prompt builder
+# -------------------------------
 
-df = pd.read_csv(args.input)
+def build_prompt(log_text):
 
-print("Dataset size:", len(df))
+    return f"""
+Rewrite this system log message.
 
+Requirements:
+- Keep the same meaning
+- Change wording and structure
+- Keep it concise like a real system log
 
-# ==============================
-# Step 1: Collect anomalous logs
-# ==============================
-print("Collecting anomalous logs...")
+Log message:
+{log_text}
 
-all_logs = []
-log_positions = []   # (row_idx, log_idx)
-
-for row_idx, row in tqdm(df.iterrows(), total=len(df)):
-
-    logs = row["Content"].split(" ;-; ")
-    labels = ast.literal_eval(row["item_Label"])
-
-    for log_idx, (log, label) in enumerate(zip(logs, labels)):
-
-        if label == 1:
-            all_logs.append("paraphrase: " + log + " </s>")
-            log_positions.append((row_idx, log_idx))
-
-print("Total anomalous logs:", len(all_logs))
+Rewritten log:
+"""
 
 
-# ==============================
-# Step 2: Batch paraphrasing
-# ==============================
-batch_size = 32
-paraphrased_logs = []
+# -------------------------------
+# Batched paraphrasing
+# -------------------------------
 
-print("Paraphrasing logs in batches...")
+def batch_paraphrase(log_list):
 
-for i in tqdm(range(0, len(all_logs), batch_size)):
+    prompts = [build_prompt(log) for log in log_list]
 
-    batch = all_logs[i:i+batch_size]
-
-    encoding = tokenizer(
-        batch,
+    inputs = tokenizer(
+        prompts,
         return_tensors="pt",
         padding=True,
         truncation=True,
@@ -87,37 +65,90 @@ for i in tqdm(range(0, len(all_logs), batch_size)):
     ).to(device)
 
     outputs = model.generate(
-        **encoding,
+        **inputs,
         max_length=64,
         do_sample=True,
-        top_k=120,
-        top_p=0.95
+        temperature=1.1,
+        top_p=0.9,
+        top_k=50
     )
 
     decoded = tokenizer.batch_decode(outputs, skip_special_tokens=True)
 
-    paraphrased_logs.extend(decoded)
+    return [x.strip() for x in decoded]
 
 
-# ==============================
-# Step 3: Rebuild windows
-# ==============================
-print("Rebuilding windows...")
+# -------------------------------
+# Main
+# -------------------------------
 
-para_content = df["Content"].tolist()
+def main():
 
-for (row_idx, log_idx), new_log in zip(log_positions, paraphrased_logs):
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--input", required=True)
+    parser.add_argument("--output", required=True)
 
-    logs = para_content[row_idx].split(" ;-; ")
-    logs[log_idx] = new_log
-    para_content[row_idx] = " ;-; ".join(logs)
+    args = parser.parse_args()
 
-df["Para_Content"] = para_content
+    print("Loading dataset:", args.input)
+
+    df = pd.read_csv(args.input)
+
+    print("Dataset size:", len(df))
+
+    # ------------------------------------------------
+    # Collect all logs that need rewriting
+    # ------------------------------------------------
+
+    logs_to_rewrite = []
+    mapping = []   # (row_index, log_position)
+
+    for idx, row in df.iterrows():
+
+        logs = row["Content"].split(" ;-; ")
+        labels = ast.literal_eval(row["item_Label"])
+
+        for pos, (log, label) in enumerate(zip(logs, labels)):
+            if label == 1:
+                logs_to_rewrite.append(log)
+                mapping.append((idx, pos))
+
+    print("Logs to rewrite:", len(logs_to_rewrite))
+
+    # ------------------------------------------------
+    # Generate paraphrases in batches
+    # ------------------------------------------------
+
+    rewritten_logs = []
+
+    for i in tqdm(range(0, len(logs_to_rewrite), BATCH_SIZE)):
+
+        batch = logs_to_rewrite[i:i+BATCH_SIZE]
+
+        outputs = batch_paraphrase(batch)
+
+        rewritten_logs.extend(outputs)
+
+    # ------------------------------------------------
+    # Insert rewritten logs back into dataset
+    # ------------------------------------------------
+
+    new_contents = df["Content"].tolist()
+
+    for (row_idx, log_pos), new_log in zip(mapping, rewritten_logs):
+
+        logs = new_contents[row_idx].split(" ;-; ")
+        logs[log_pos] = new_log
+        new_contents[row_idx] = " ;-; ".join(logs)
+
+    df["Para_Content"] = new_contents
+
+    print("Saving dataset...")
+
+    df.to_csv(args.output, index=False)
+
+    print("Saved to:", args.output)
 
 
-# ==============================
-# Save
-# ==============================
-df.to_csv(args.output, index=False)
-
-print("Saved to:", args.output)
+if __name__ == "__main__":
+    main()

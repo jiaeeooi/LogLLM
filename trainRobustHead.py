@@ -155,10 +155,10 @@ def trainRobustHead(model, dataloader, gradient_accumulation_steps, n_epochs, lr
         for i_th, batch_i in enumerate(pbar):
             steps += 1
 
-            inputs = batch_i['inputs'].to(device)
-            para_inputs = batch_i['para_inputs'].to(device)
-            #inputs = {k: v.to(device) for k, v in batch_i['inputs'].items()}
-            #para_inputs = {k: v.to(device) for k, v in batch_i['para_inputs'].items()}
+            #inputs = batch_i['inputs'].to(device)
+            #para_inputs = batch_i['para_inputs'].to(device)
+            inputs = {k: v.to(device) for k, v in batch_i['inputs'].items()}
+            para_inputs = {k: v.to(device) for k, v in batch_i['para_inputs'].items()}
 
             # Forward
             z_orig = model.encode_with_robust_head(inputs)

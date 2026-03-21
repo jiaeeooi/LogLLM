@@ -137,15 +137,13 @@ def trainRobustHead(model, dataloader, gradient_accumulation_steps, n_epochs, lr
         model.robust_head.parameters(),  #
         lr=lr
     )
+    optimizer.zero_grad()
 
-    scheduler = optim.lr_scheduler.ExponentialLR(optimizer, gamma=0.7)
-
-    total_steps = n_epochs * len(dataloader)
-    scheduler_step = max(int(total_steps / 10), 1)
-
-    print(f'scheduler_step: {scheduler_step}')
-
-    steps = 0
+    #scheduler = optim.lr_scheduler.ExponentialLR(optimizer, gamma=0.7)
+    #total_steps = n_epochs * len(dataloader)
+    #scheduler_step = max(int(total_steps / 10), 1)
+    #print(f'scheduler_step: {scheduler_step}')
+    #steps = 0
 
     for epoch in range(n_epochs):
         total_loss, total_count = 0, 0  #
@@ -153,7 +151,7 @@ def trainRobustHead(model, dataloader, gradient_accumulation_steps, n_epochs, lr
         pbar = tqdm(dataloader, desc=f'Robust Epoch {epoch+1}/{n_epochs}')  #
 
         for i_th, batch_i in enumerate(pbar):
-            steps += 1
+            #steps += 1
 
             #inputs = batch_i['inputs'].to(device)
             #para_inputs = batch_i['para_inputs'].to(device)
@@ -181,11 +179,15 @@ def trainRobustHead(model, dataloader, gradient_accumulation_steps, n_epochs, lr
             total_loss += loss.item() * gradient_accumulation_steps * batch_size_actual
             total_count += batch_size_actual
 
-            if steps % scheduler_step == 0:
-                scheduler.step()
+            #if steps % scheduler_step == 0:
+                #scheduler.step()
 
+            #pbar.set_postfix(
+                #lr=scheduler.get_last_lr()[0],
+                #loss=loss.item() * gradient_accumulation_steps
+            #)
             pbar.set_postfix(
-                lr=scheduler.get_last_lr()[0],
+                lr=optimizer.param_groups[0]['lr'],
                 loss=loss.item() * gradient_accumulation_steps
             )
 

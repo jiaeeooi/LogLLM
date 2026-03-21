@@ -175,8 +175,11 @@ def trainRobustHead(model, dataloader, gradient_accumulation_steps, n_epochs, lr
                 optimizer.step()
                 optimizer.zero_grad()
 
-            total_loss += loss.item() * gradient_accumulation_steps * inputs.size(0)
-            total_count += inputs.size(0)
+            #total_loss += loss.item() * gradient_accumulation_steps * inputs.size(0)
+            #total_count += inputs.size(0)
+            batch_size_actual = next(iter(inputs.values())).size(0)
+            total_loss += loss.item() * gradient_accumulation_steps * batch_size_actual
+            total_count += batch_size_actual
 
             if steps % scheduler_step == 0:
                 scheduler.step()

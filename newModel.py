@@ -381,7 +381,6 @@ class LogLLM(nn.Module):
         return torch.stack(answer,dim=1)
 
     def encode_with_robust_head(self, inputs):
-        with torch.no_grad():
-            h = self.Bert_model(**inputs).pooler_output.float()
-        z = self.robust_head(h)
+        h = self.Bert_model(**inputs).pooler_output.float().detach()  # BERT frozen
+        z = self.robust_head(h)                                       # robust head gets gradients
         return z

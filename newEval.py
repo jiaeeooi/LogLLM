@@ -13,7 +13,7 @@ max_content_len = 100
 max_seq_len = 128
 batch_size = 32
 dataset_name = 'BGL'   # 'Thunderbird' 'HDFS_v1'  'BGL'  'Liberty‘
-data_path = "/content/bgl_test_paraphrased.csv"
+data_path = "/content/bgl_new_test.csv"
 
 Bert_path = "bert-base-uncased"
 Llama_path = "meta-llama/Meta-Llama-3-8B"

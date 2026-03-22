@@ -74,7 +74,7 @@ class RobustDataset(Dataset):
         if drop_duplicates:
             df = df.drop_duplicates(subset='Content', keep='first')
         self.sequences = np.array([content.split(' ;-; ') for content in df['Content'].values], dtype=object)
-        self.para_sequences = np.array([content.split(' ;-; ') for content in df['ParaContent'].values], dtype=object)
+        self.para_sequences = np.array([content.split(' ;-; ') for content in df['Para_Content'].values], dtype=object)
         self.labels = df['Label'].values
         if drop_duplicates:
             print('Number of normal samples after dropping duplicates: {}'.format((self.labels==0).sum()))

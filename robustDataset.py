@@ -70,7 +70,7 @@ class RobustDataset(Dataset):
         print('Number of normal samples in original dataset: {}'.format((df['Label'].values==0).sum()))
         print('Number of anomalous samples in original dataset: {}'.format((df['Label'].values==1).sum()))
         df['Content'] = df['Content'].apply(replace_patterns)
-        df['ParaContent'] = df['ParaContent'].apply(replace_patterns)
+        df['Para_Content'] = df['Para_Content'].apply(replace_patterns)
         if drop_duplicates:
             df = df.drop_duplicates(subset='Content', keep='first')
         self.sequences = np.array([content.split(' ;-; ') for content in df['Content'].values], dtype=object)

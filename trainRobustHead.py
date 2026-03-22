@@ -137,18 +137,19 @@ def trainRobustHead(model, dataloader, gradient_accumulation_steps, n_epochs, lr
         model.robust_head.parameters(),  #
         lr=lr
     )
-    optimizer.zero_grad()
 
-    #scheduler = optim.lr_scheduler.ExponentialLR(optimizer, gamma=0.7)
-    #total_steps = n_epochs * len(dataloader)
-    #scheduler_step = max(int(total_steps / 10), 1)
-    #print(f'scheduler_step: {scheduler_step}')
-    #steps = 0
+    scheduler = optim.lr_scheduler.ExponentialLR(optimizer, gamma=0.7)
+    total_steps = n_epochs * len(dataloader)
+    scheduler_step = max(int(total_steps / 10), 1)
+    print(f'scheduler_step: {scheduler_step}')
+    steps = 0
 
     for epoch in range(n_epochs):
         total_loss, total_count = 0, 0  #
         
         pbar = tqdm(dataloader, desc=f'Robust Epoch {epoch+1}/{n_epochs}')  #
+
+        optimizer.zero_grad()
 
         for i_th, batch_i in enumerate(pbar):
             #steps += 1
@@ -158,12 +159,17 @@ def trainRobustHead(model, dataloader, gradient_accumulation_steps, n_epochs, lr
             inputs = {k: v.to(device) for k, v in batch_i['inputs'].items()}
             para_inputs = {k: v.to(device) for k, v in batch_i['para_inputs'].items()}
 
-            # Forward
-            z_orig = model.encode_with_robust_head(inputs)
-            z_para = model.encode_with_robust_head(para_inputs)
+            with torch.no_grad():
+                #h_orig = model.Bert_model(**inputs).pooler_output.float()
+                #h_para = model.Bert_model(**para_inputs).pooler_output.float()
+                h_orig = model.Bert_model(**inputs).last_hidden_state[:, 0].float()
+                h_para = model.Bert_model(**para_inputs).last_hidden_state[:, 0].float()
 
-            loss = vicreg_loss(z_orig, z_para)
-            loss = loss / gradient_accumulation_steps
+            # Forward
+            z_orig = model.robust_head(h_orig)
+            z_para = model.robust_head(h_para)
+
+            loss = vicreg_loss(z_orig, z_para) / gradient_accumulation_steps
 
             loss.backward()
 
@@ -172,6 +178,10 @@ def trainRobustHead(model, dataloader, gradient_accumulation_steps, n_epochs, lr
                ((i_th + 1) == len(dataloader)):
                 optimizer.step()
                 optimizer.zero_grad()
+                steps += 1
+
+                if steps % scheduler_step == 0:
+                    scheduler.step()
 
             #total_loss += loss.item() * gradient_accumulation_steps * inputs.size(0)
             #total_count += inputs.size(0)

@@ -25,7 +25,7 @@ max_content_len = 100
 max_seq_len = 128
 min_less_portion = 0.3
 
-data_path = r'/content/data/{}/train.csv'.format(dataset_name)
+data_path = "/content/bgl_train_paraphrased.csv"
 Bert_path = "bert-base-uncased"
 Llama_path = "meta-llama/Meta-Llama-3-8B"
 

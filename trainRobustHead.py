@@ -130,7 +130,7 @@ def print_number_of_trainable_model_parameters(model):
 # Robust Training
 # ===============================
 
-def trainRobustHead(model, dataloader, gradient_accumulation_steps, n_epochs, lr):
+def trainJoint(model, dataloader, gradient_accumulation_steps, n_epochs, lr):
 
     print_number_of_trainable_model_parameters(model)
 
@@ -268,7 +268,7 @@ if __name__ == '__main__':
 
     model.train()  #
 
-    trainRobustHead(
+    trainJoint(
         model,
         dataloader,
         gradient_accumulation_steps,

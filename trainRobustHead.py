@@ -159,6 +159,8 @@ def trainRobustHead(model, dataloader, gradient_accumulation_steps, n_epochs, lr
             #para_inputs = batch_i['para_inputs'].to(device)
             inputs = {k: v.to(device) for k, v in batch_i['inputs'].items()}
             para_inputs = {k: v.to(device) for k, v in batch_i['para_inputs'].items()}
+            seq_positions = batch_i['seq_positions']
+            labels = batch_i['labels']
 
             with torch.no_grad:
                 h_orig = model.Bert_model(**inputs).pooler_output.float()
@@ -171,17 +173,18 @@ def trainRobustHead(model, dataloader, gradient_accumulation_steps, n_epochs, lr
             z_para = model.robust_head(h_para)
 
             loss_vicreg = vicreg_loss(z_orig, z_para) 
+            
+            labels_np = labels.clone().cpu().numpy().astype(object)
+            labels_np[labels_np == 0] = 'normal'
+            labels_np[labels_np == 1] = 'anomalous'
 
-            inputs_llama = {k: v.to(device) for k, v in batch_i['inputs'].items()}
-            seq_positions = batch_i['seq_positions']
-            labels = batch_i['labels']
+            logits, targets = model.train_helper(inputs, seq_positions, labels_np)
 
-            logits, targets = model.train_helper(inputs_llama, seq_positions, labels)
+            #criterion = nn.CrossEntropyLoss(reduction='mean')
+            #loss_task = criterion(logits, targets)
+            loss_task = F.cross_entropy(logits, targets)
 
-            criterion = nn.CrossEntropyLoss(reduction='mean')
-            loss_task = criterion(logits, targets)
-
-            lambda_vicreg = 0.1   # 🔥 tune later
+            lambda_vicreg = 0.05 # Tune
             loss = (loss_task + lambda_vicreg * loss_vicreg) / gradient_accumulation_steps
 
             loss.backward()

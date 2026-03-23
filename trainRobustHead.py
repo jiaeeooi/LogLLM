@@ -160,11 +160,11 @@ def trainRobustHead(model, dataloader, gradient_accumulation_steps, n_epochs, lr
             inputs = {k: v.to(device) for k, v in batch_i['inputs'].items()}
             para_inputs = {k: v.to(device) for k, v in batch_i['para_inputs'].items()}
 
-            
-            h_orig = model.Bert_model(**inputs).pooler_output.float()
-            h_para = model.Bert_model(**para_inputs).pooler_output.float()
-            #h_orig = model.Bert_model(**inputs).last_hidden_state[:, 0].float()
-            #h_para = model.Bert_model(**para_inputs).last_hidden_state[:, 0].float()
+            with torch.no_grad:
+                h_orig = model.Bert_model(**inputs).pooler_output.float()
+                h_para = model.Bert_model(**para_inputs).pooler_output.float()
+                #h_orig = model.Bert_model(**inputs).last_hidden_state[:, 0].float()
+                #h_para = model.Bert_model(**para_inputs).last_hidden_state[:, 0].float()
 
             # Forward
             z_orig = model.robust_head(h_orig)

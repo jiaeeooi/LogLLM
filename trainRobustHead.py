@@ -3,6 +3,7 @@ from pathlib import Path
 import torch
 from tqdm import tqdm
 from torch import optim
+from torch import nn
 import torch.nn.functional as F
 from torch.utils.data import DataLoader
 
@@ -50,7 +51,7 @@ f'device: {device}')
 
 
 # ===============================
-# Loss
+# SimCLR Loss
 # ===============================
 
 def simclr_loss(z1, z2, temperature=0.07):
@@ -134,7 +135,7 @@ def trainRobustHead(model, dataloader, gradient_accumulation_steps, n_epochs, lr
     print_number_of_trainable_model_parameters(model)
 
     optimizer = torch.optim.AdamW(
-        model.robust_head.parameters(),  #
+        list(model.robust_head.parameters()) + list(model.projector.parameters()),  #
         lr=lr
     )
 
@@ -159,17 +160,29 @@ def trainRobustHead(model, dataloader, gradient_accumulation_steps, n_epochs, lr
             inputs = {k: v.to(device) for k, v in batch_i['inputs'].items()}
             para_inputs = {k: v.to(device) for k, v in batch_i['para_inputs'].items()}
 
-            with torch.no_grad():
-                h_orig = model.Bert_model(**inputs).pooler_output.float()
-                h_para = model.Bert_model(**para_inputs).pooler_output.float()
-                #h_orig = model.Bert_model(**inputs).last_hidden_state[:, 0].float()
-                #h_para = model.Bert_model(**para_inputs).last_hidden_state[:, 0].float()
+            
+            h_orig = model.Bert_model(**inputs).pooler_output.float()
+            h_para = model.Bert_model(**para_inputs).pooler_output.float()
+            #h_orig = model.Bert_model(**inputs).last_hidden_state[:, 0].float()
+            #h_para = model.Bert_model(**para_inputs).last_hidden_state[:, 0].float()
 
             # Forward
             z_orig = model.robust_head(h_orig)
             z_para = model.robust_head(h_para)
 
-            loss = vicreg_loss(z_orig, z_para) / gradient_accumulation_steps
+            loss_vicreg = vicreg_loss(z_orig, z_para) 
+
+            inputs_llama = {k: v.to(device) for k, v in batch_i['inputs'].items()}
+            seq_positions = batch_i['seq_positions']
+            labels = batch_i['labels']
+
+            logits, targets = model.train_helper(inputs_llama, seq_positions, labels)
+
+            criterion = nn.CrossEntropyLoss(reduction='mean')
+            loss_task = criterion(logits, targets)
+
+            lambda_vicreg = 0.1   # 🔥 tune later
+            loss = (loss_task + lambda_vicreg * loss_vicreg) / gradient_accumulation_steps
 
             loss.backward()
 
@@ -198,7 +211,9 @@ def trainRobustHead(model, dataloader, gradient_accumulation_steps, n_epochs, lr
             #)
             pbar.set_postfix(
                 lr=optimizer.param_groups[0]['lr'],
-                loss=loss.item() * gradient_accumulation_steps
+                loss=loss.item() * gradient_accumulation_steps,
+                task=loss_task.item(),
+                vicreg=loss_vicreg.item()
             )
 
         if total_count > 0:
@@ -245,6 +260,9 @@ if __name__ == '__main__':
     # Freeze everything except robust head
     print("*" * 10 + "Start training Robust Head" + "*" * 10)
     model.set_train_only_robust_head()
+    for p in model.projector.parameters():
+        p.requires_grad = True
+
     model.train()  #
 
     trainRobustHead(

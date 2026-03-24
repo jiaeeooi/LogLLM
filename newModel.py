@@ -121,7 +121,8 @@ class LogLLM(nn.Module):
             print(f'Loading peft model from {ft_path}.')
             Llama_ft_path = os.path.join(ft_path, 'Llama_ft')
             Bert_ft_path = os.path.join(ft_path, 'Bert_ft')
-            projector_path = os.path.join(ft_path, 'newprojector.pt')  # 
+            projector_path = os.path.join(ft_path, 'projector.pt')  # 
+            #projector_path = os.path.join(ft_path, 'newprojector.pt')  #
             robust_path = os.path.join(ft_path, 'robust.pt')  #
             self.Llama_model = PeftModel.from_pretrained(
                 self.Llama_model,

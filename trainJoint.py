@@ -19,7 +19,7 @@ batch_size = 16
 micro_batch_size = 4
 gradient_accumulation_steps = batch_size // micro_batch_size
 
-n_epochs_robust = 2
+n_epochs_robust = 1
 lr_robust = 1e-4
 
 max_content_len = 100
@@ -282,4 +282,4 @@ if __name__ == '__main__':
     print(f"Robust head saved to {robust_path}")
 
     torch.save(model.projector.state_dict(), new_projector_path)
-    print(f"Robust head saved to {newprojector_path}")
+    print(f"Projector saved to {_path}")

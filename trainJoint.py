@@ -163,7 +163,7 @@ def trainJoint(model, dataloader, gradient_accumulation_steps, n_epochs, lr):
             seq_positions = batch_i['seq_positions']
             labels = batch_i['labels']
 
-            with torch.no_grad:
+            with torch.no_grad():
                 h_orig = model.Bert_model(**inputs).pooler_output.float()
                 h_para = model.Bert_model(**para_inputs).pooler_output.float()
                 #h_orig = model.Bert_model(**inputs).last_hidden_state[:, 0].float()

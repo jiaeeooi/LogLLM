@@ -35,6 +35,7 @@ device = torch.device("cuda:0")
 ROOT_DIR = Path(__file__).parent
 ft_path = os.path.join(ROOT_DIR, r"ft_model_{}".format(dataset_name))
 robust_path = os.path.join(ft_path, 'robust.pt')
+new_projector_path = os.path.join(ft_path, 'newprojector.pt')
 
 
 
@@ -276,6 +277,9 @@ if __name__ == '__main__':
         lr_robust
     )
 
-    # Save only robust head
+    # Save model
     torch.save(model.robust_head.state_dict(), robust_path)  #
     print(f"Robust head saved to {robust_path}")
+
+    torch.save(model.projector.state_dict(), new_projector_path)
+    print(f"Robust head saved to {newprojector_path}")

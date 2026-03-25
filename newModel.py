@@ -121,6 +121,7 @@ class LogLLM(nn.Module):
         if ft_path is not None:
             print(f'Loading peft model from {ft_path}.')
             Llama_ft_path = os.path.join(ft_path, 'Llama_ft')
+            #Llama_ft_path = os.path.join(ft_path, 'Llama_ft')
             Bert_ft_path = os.path.join(ft_path, 'Bert_ft')
             projector_path = os.path.join(ft_path, 'projector.pt')  # 
             #projector_path = os.path.join(ft_path, 'newprojector.pt')  #
@@ -383,8 +384,3 @@ class LogLLM(nn.Module):
                 this_peer_finished = True
 
         return torch.stack(answer,dim=1)
-
-    def encode_with_robust_head(self, inputs):
-        h = self.Bert_model(**inputs).pooler_output.float().detach()  # BERT frozen
-        z = self.robust_head(h)                                       # robust head gets gradients
-        return z

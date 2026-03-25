@@ -6,6 +6,7 @@ from transformers import BertTokenizerFast, BertModel, BitsAndBytesConfig, AutoT
 import numpy as np
 from torch import nn
 from peft import PeftModel, LoraConfig, prepare_model_for_kbit_training, get_peft_model, TaskType
+import torch.nn.functional as F
 
 def merge_data(data):
     merged_data = []
@@ -230,6 +231,7 @@ class LogLLM(nn.Module):
         outputs = self.Bert_model(**inputs).pooler_output  # dim = 768
         outputs = outputs.float()
         outputs = self.robust_head(outputs) # NEW: apply robustness head
+        outputs = F.normalize(outputs, dim=-1) # NEW
         outputs = self.projector(outputs)
         outputs = outputs.half()
 
@@ -288,6 +290,7 @@ class LogLLM(nn.Module):
         outputs = self.Bert_model(**inputs).pooler_output  # dim = 768
         outputs = outputs.float()
         outputs = self.robust_head(outputs) # NEW: apply robustness head
+        outputs = F.normalize(outputs, dim=-1) # NEW
         outputs = self.projector(outputs)
         outputs = outputs.half()
 

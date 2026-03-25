@@ -282,4 +282,4 @@ if __name__ == '__main__':
     print(f"Robust head saved to {robust_path}")
 
     torch.save(model.projector.state_dict(), new_projector_path)
-    print(f"Projector saved to {_path}")
+    print(f"Projector saved to {new_projector_path}")

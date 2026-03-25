@@ -6,6 +6,7 @@ from torch import optim
 from torch import nn
 import torch.nn.functional as F
 from torch.utils.data import DataLoader
+from torch.optim import AdamW
 
 from newModel import LogLLM
 from robustDataset import RobustDataset, RobustCollator, BalancedSampler
@@ -19,7 +20,7 @@ batch_size = 16
 micro_batch_size = 4
 gradient_accumulation_steps = batch_size // micro_batch_size
 
-n_epochs_robust = 1
+n_epochs_robust = 2
 lr_robust = 1e-4
 
 max_content_len = 100
@@ -36,8 +37,7 @@ ROOT_DIR = Path(__file__).parent
 ft_path = os.path.join(ROOT_DIR, r"ft_model_{}".format(dataset_name))
 robust_path = os.path.join(ft_path, 'robust.pt')
 new_projector_path = os.path.join(ft_path, 'newprojector.pt')
-
-
+new_Llama_ft_path = os.path.join(ft_path,'newLlama_ft')
 
 
 print(f'n_epochs_robust: {n_epochs_robust}\n'
@@ -50,29 +50,6 @@ f'max_seq_len: {max_seq_len}\n'
 f'min_less_portion: {min_less_portion}\n'
 f'device: {device}')
 
-
-# ===============================
-# SimCLR Loss
-# ===============================
-
-def simclr_loss(z1, z2, temperature=0.07):
-
-    B = z1.size(0)
-
-    z1 = F.normalize(z1, dim=1)
-    z2 = F.normalize(z2, dim=1)
-
-    z = torch.cat([z1, z2], dim=0)
-    sim = torch.matmul(z, z.T) / temperature
-    mask = torch.eye(2 * B, device=z.device).bool()
-    sim.masked_fill_(mask, -9e15)
-    positives = torch.cat([
-        torch.arange(B, 2*B),
-        torch.arange(0, B)
-    ]).to(z.device)
-
-    loss = F.cross_entropy(sim, positives)
-    return loss
 
 # ===============================
 # VICReg Loss
@@ -135,10 +112,16 @@ def trainJoint(model, dataloader, gradient_accumulation_steps, n_epochs, lr):
 
     print_number_of_trainable_model_parameters(model)
 
-    optimizer = torch.optim.AdamW(
-        list(model.robust_head.parameters()) + list(model.projector.parameters()),  #
-        lr=lr
-    )
+    llama_params = [
+        p for name, p in model.Llama_model.named_parameters()
+        if p.requires_grad
+    ]
+
+    optimizer = AdamW([
+        {"params": model.robust_head.parameters(), "lr": 1e-4},
+        {"params": model.projector.parameters(), "lr": 1e-4},
+        {"params": llama_params, "lr": 5e-5}, 
+    ])
 
     scheduler = optim.lr_scheduler.ExponentialLR(optimizer, gamma=0.7)
     total_steps = n_epochs * len(dataloader)
@@ -263,9 +246,21 @@ if __name__ == '__main__':
 
     # Freeze everything except robust head
     print("*" * 10 + "Start training Robust Head" + "*" * 10)
-    model.set_train_only_robust_head()
+    for p in model.parameters():
+      p.requires_grad = False
+
+    # robust head
+    for p in model.robust_head.parameters():
+        p.requires_grad = True
+
+    # projector
     for p in model.projector.parameters():
         p.requires_grad = True
+
+    # small part of LLaMA
+    for name, p in model.Llama_model.named_parameters():
+        if "layers.31" in name or "lm_head" in name:
+            p.requires_grad = True
 
     model.train()  #
 
@@ -278,8 +273,11 @@ if __name__ == '__main__':
     )
 
     # Save model
-    torch.save(model.robust_head.state_dict(), robust_path)  #
+    torch.save(model.robust_head.state_dict(), robust_path)  
     print(f"Robust head saved to {robust_path}")
 
     torch.save(model.projector.state_dict(), new_projector_path)
     print(f"Projector saved to {new_projector_path}")
+
+    model.Llama_model.save_pretrained(new_Llama_ft_path, safe_serialization=True)
+    print(f"Llama saved to {new_Llama_ft_path}")

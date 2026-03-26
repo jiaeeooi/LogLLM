@@ -120,8 +120,8 @@ class LogLLM(nn.Module):
 
         if ft_path is not None:
             print(f'Loading peft model from {ft_path}.')
-            Llama_ft_path = os.path.join(ft_path, 'Llama_ft')
-            #Llama_ft_path = os.path.join(ft_path, 'Llama_ft')
+            Llama_ft_path = os.path.join(ft_path, 'Llama_ft')  #
+            #Llama_ft_path = os.path.join(ft_path, 'newLlama_ft')  #
             Bert_ft_path = os.path.join(ft_path, 'Bert_ft')
             projector_path = os.path.join(ft_path, 'projector.pt')  # 
             #projector_path = os.path.join(ft_path, 'newprojector.pt')  #

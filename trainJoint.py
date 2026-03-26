@@ -120,7 +120,7 @@ def trainJoint(model, dataloader, gradient_accumulation_steps, n_epochs, lr):
     optimizer = AdamW([
         {"params": model.robust_head.parameters(), "lr": 1e-4},
         {"params": model.projector.parameters(), "lr": 1e-4},
-        {"params": llama_params, "lr": 5e-5}, 
+        {"params": llama_params, "lr": 1e-5}, 
     ])
 
     scheduler = optim.lr_scheduler.ExponentialLR(optimizer, gamma=0.7)

@@ -265,7 +265,7 @@ if __name__ == '__main__':
 
     # small part of LLaMA
     for name, p in model.Llama_model.named_parameters():
-        if "layers.31" in name or "lm_head" in name:
+        if "lora" in name:
             p.requires_grad = True
 
     model.train()  #

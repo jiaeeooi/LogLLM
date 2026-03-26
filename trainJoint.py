@@ -20,7 +20,7 @@ batch_size = 16
 micro_batch_size = 4
 gradient_accumulation_steps = batch_size // micro_batch_size
 
-n_epochs_robust = 2
+n_epochs_robust = 1
 lr_robust = 1e-4
 
 max_content_len = 100
@@ -250,8 +250,7 @@ if __name__ == '__main__':
         drop_last=True
     )
 
-    # Freeze everything except robust head
-    print("*" * 10 + "Start training Robust Head" + "*" * 10)
+    print("*" * 10 + "Start training" + "*" * 10)
     for p in model.parameters():
       p.requires_grad = False
 

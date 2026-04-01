@@ -88,6 +88,30 @@ def vicreg_loss(z1, z2, sim_coeff=25.0, std_coeff=25.0, cov_coeff=1.0, eps=1e-4)
     )
     return loss
 
+# ===============================
+# InfoNCE Loss
+# ===============================
+
+def info_nce_loss(z1, z2, temperature=0.1):
+    z1 = F.normalize(z1, dim=-1)
+    z2 = F.normalize(z2, dim=-1)
+
+    batch_size = z1.size(0)
+    representations = torch.cat([z1, z2], dim=0)
+
+    similarity_matrix = torch.matmul(representations, representations.T)
+
+    labels = torch.arange(batch_size, device=z1.device)
+    labels = torch.cat([labels + batch_size, labels])
+
+    mask = torch.eye(2 * batch_size, dtype=torch.bool, device=z1.device)
+    similarity_matrix = similarity_matrix.masked_fill(mask, -1e9)
+
+    similarity_matrix /= temperature
+
+    loss = F.cross_entropy(similarity_matrix, labels)
+    return loss
+
 
 # ===============================
 # Utility

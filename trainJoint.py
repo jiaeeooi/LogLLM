@@ -92,7 +92,7 @@ def vicreg_loss(z1, z2, sim_coeff=25.0, std_coeff=25.0, cov_coeff=1.0, eps=1e-4)
 # InfoNCE Loss
 # ===============================
 
-def info_nce_loss(z1, z2, temperature=0.1):
+def infonce_loss(z1, z2, temperature=0.3):
     z1 = F.normalize(z1, dim=-1)
     z2 = F.normalize(z2, dim=-1)
 
@@ -180,13 +180,14 @@ def trainJoint(model, dataloader, gradient_accumulation_steps, n_epochs, lr):
             z_orig = model.robust_head(h_orig)
             z_para = model.robust_head(h_para)
 
-            z_orig = F.normalize(z_orig, dim=-1)
-            z_para = F.normalize(z_para, dim=-1)
+            #z_orig = F.normalize(z_orig, dim=-1)
+            #z_para = F.normalize(z_para, dim=-1)
 
             p_orig = model.projector(z_orig)
             p_para = model.projector(z_para)
 
-            loss_vicreg = vicreg_loss(p_orig, p_para) 
+            #loss_vicreg = vicreg_loss(p_orig, p_para) 
+            loss_infonce = infonce_loss(p_orig, p_para)
             
             labels_np = labels.clone().cpu().numpy().astype(object)
             labels_np[labels_np == 0] = 'normal'
@@ -199,7 +200,9 @@ def trainJoint(model, dataloader, gradient_accumulation_steps, n_epochs, lr):
             loss_task = F.cross_entropy(logits, targets)
 
             lambda_vicreg = 0.05 # Tune
-            loss = (loss_task + lambda_vicreg * loss_vicreg) / gradient_accumulation_steps
+            #loss = (loss_task + lambda_vicreg * loss_vicreg) / gradient_accumulation_steps
+            lambda_infonce = 0.05
+            loss = (loss_task + lambda_infonce * loss_infonce) / gradient_accumulation_steps
 
             loss.backward()
 
@@ -230,7 +233,8 @@ def trainJoint(model, dataloader, gradient_accumulation_steps, n_epochs, lr):
                 lr=optimizer.param_groups[0]['lr'],
                 loss=loss.item() * gradient_accumulation_steps,
                 task=loss_task.item(),
-                vicreg=loss_vicreg.item()
+                #vicreg=loss_vicreg.item()
+                infonce=loss_infonce.item()
             )
 
         if total_count > 0:

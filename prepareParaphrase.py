@@ -7,6 +7,8 @@ import torch
 import argparse
 from transformers import AutoTokenizer, AutoModelForSeq2SeqLM
 from tqdm import tqdm
+import re
+import random
 
 
 # ==============================
@@ -32,6 +34,31 @@ device = "cuda" if torch.cuda.is_available() else "cpu"
 model = model.to(device)
 
 print("Using device:", device)
+
+# ==============================
+# Tame anomaly words 
+# ==============================
+def tame_anomaly_words(text):
+    replacements = {
+        r"\berror\b": ["issue", "problem"],
+        r"\bfailure\b": ["condition", "event"],
+        r"\bfailed\b": ["not completed", "unsuccessful"],
+        r"\bfatal\b": ["critical", "serious"],
+        r"\bcritical\b": ["notable", "significant"],
+        r"\bpanic\b": ["alert", "warning"],
+        r"\bfault\b": ["irregularity", "issue"],
+        r"\bexception\b": ["event", "condition"],
+        r"\binvalid\b": ["unexpected", "unusual"],
+        r"\bdetected\b": ["observed", "identified", "found"],
+        r"\binterrupt\b": ["signal", "event"],
+        r"\bsevered\b": ["disconnected", "interrupted"],
+        r"\bterminated\b": ["stopped", "ended"],
+        r"\bmajor\b": ["notable", "significant"]
+    }
+    for pattern, options in replacements.items():
+        text = re.sub(pattern, random.choice(options), text, flags=re.IGNORECASE)
+    return text
+
 
 
 # ==============================
@@ -88,15 +115,16 @@ for i in tqdm(range(0, len(all_logs), batch_size)):
 
     outputs = model.generate(
         **encoding,
-        max_length=64,
+        max_length=128,
         do_sample=True,
-        temperature=1.6,
-        top_k=60,
-        top_p=0.9
+        temperature=1.2,
+        top_k=50,
+        top_p=0.85,
+        repetition_penalty=1.2
     )
 
     decoded = tokenizer.batch_decode(outputs, skip_special_tokens=True)
-
+    decoded = [tame_anomaly_words(text) for text in decoded]
     paraphrased_logs.extend(decoded)
 
 
@@ -120,5 +148,4 @@ df["Para_Content"] = para_content
 # Save
 # ==============================
 df.to_csv(args.output, index=False)
-
 print("Saved to:", args.output)

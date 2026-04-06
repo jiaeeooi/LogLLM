@@ -199,9 +199,9 @@ def trainJoint(model, dataloader, gradient_accumulation_steps, n_epochs, lr):
             #loss_task = criterion(logits, targets)
             loss_task = F.cross_entropy(logits, targets)
 
-            lambda_vicreg = 0.01 # Tune
+            lambda_vicreg = 0.1 # Tune
             #loss = (loss_task + lambda_vicreg * loss_vicreg) / gradient_accumulation_steps
-            lambda_infonce = 0.01
+            lambda_infonce = 0.1
             loss = (loss_task + lambda_infonce * loss_infonce) / gradient_accumulation_steps
 
             loss.backward()

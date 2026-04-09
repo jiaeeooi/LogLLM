@@ -201,7 +201,7 @@ def trainJoint(model, dataloader, gradient_accumulation_steps, n_epochs, lr):
 
             #lambda_vicreg = 0.1 # Tune
             #loss = (loss_task + lambda_vicreg * loss_vicreg) / gradient_accumulation_steps
-            lambda_infonce = 0.125
+            lambda_infonce = 0.09
             loss = (loss_task + lambda_infonce * loss_infonce) / gradient_accumulation_steps
 
             loss.backward()

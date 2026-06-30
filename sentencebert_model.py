@@ -96,13 +96,21 @@ class LogLLM(nn.Module):
                                                            low_cpu_mem_usage=True,
                                                            device_map=device)  # embedding dim = 4096
 
-        self.Bert_tokenizer = BertTokenizerFast.from_pretrained(Bert_path, do_lower_case=True)
-        self.Bert_model = BertModel.from_pretrained(Bert_path, quantization_config=bnb_config, low_cpu_mem_usage=True,
-                                               device_map=device)
+        #self.Bert_tokenizer = BertTokenizerFast.from_pretrained(Bert_path, do_lower_case=True)
+        #self.Bert_model = BertModel.from_pretrained(Bert_path, quantization_config=bnb_config, low_cpu_mem_usage=True, device_map=device)
 
-        self.projector = nn.Linear(self.Bert_model.config.hidden_size, self.Llama_model.config.hidden_size, device=device)
+        #self.projector = nn.Linear(self.Bert_model.config.hidden_size, self.Llama_model.config.hidden_size, device=device)
         # self.projector = nn.Linear(self.Bert_model.config.hidden_size, self.Llama_model.config.hidden_size).half().to(device)
 
+        self.Bert_model = SentenceTransformer(Bert_path, device=str(device))
+        self.Bert_tokenizer = self.Bert_model.tokenizer
+
+        self.projector = nn.Linear(
+            self.Bert_model.get_sentence_embedding_dimension(),
+            self.Llama_model.config.hidden_size,
+            device=device
+        )
+        
         self.instruc_tokens = self.Llama_tokenizer(
             ['Below is a sequence of system log messages:', '. Is this sequence normal or anomalous? \\n'],
             return_tensors="pt", padding=True).to(self.device)
@@ -205,8 +213,11 @@ class LogLLM(nn.Module):
         '''
         batch_size = len(labels)
 
-
-        outputs = self.Bert_model(**inputs).pooler_output  # dim = 768
+        #outputs = self.Bert_model(**inputs).pooler_output  # dim = 768
+        outputs = self.Bert_model({
+            "input_ids": inputs["input_ids"],
+            "attention_mask": inputs["attention_mask"]
+        })["sentence_embedding"]
         outputs = outputs.float()
         outputs = self.projector(outputs)
         outputs = outputs.half()
@@ -263,7 +274,11 @@ class LogLLM(nn.Module):
         '''
         batch_size = len(seq_positions) + 1
 
-        outputs = self.Bert_model(**inputs).pooler_output  # dim = 768
+        #outputs = self.Bert_model(**inputs).pooler_output  # dim = 768
+        outputs = self.Bert_model({
+            "input_ids": inputs["input_ids"],
+            "attention_mask": inputs["attention_mask"]
+        })["sentence_embedding"]
         outputs = outputs.float()
         outputs = self.projector(outputs)
         outputs = outputs.half()

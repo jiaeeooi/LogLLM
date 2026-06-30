@@ -15,13 +15,15 @@ batch_size = 32
 dataset_name = 'BGL'   # 'Thunderbird' 'HDFS_v1'  'BGL'  'Liberty‘
 data_path = "/content/drive/MyDrive/LogLLM/BGL/bgl_test.csv"
 
-Bert_path = "bert-base-uncased"
+#Bert_path = "bert-base-uncased"
+Bert_path = "sentence-transformers/all-mpnet-base-v2"
 Llama_path = "meta-llama/Meta-Llama-3-8B"
 
 ROOT_DIR = Path(__file__).parent
 #ft_path = os.path.join(ROOT_DIR, r"ft_model_{}".format(dataset_name))
 #ft_path = f"/content/drive/MyDrive/LogLLM/results/ft_model_{dataset_name}"
-ft_path = f"/content/drive/MyDrive/LogLLM/results/ft_model_{dataset_name}_meanpool"
+#ft_path = f"/content/drive/MyDrive/LogLLM/results/ft_model_{dataset_name}_meanpool"
+ft_path = f"/content/drive/MyDrive/LogLLM/results/ft_model_{dataset_name}_mpnet"
 
 device = torch.device("cuda:0")
 

@@ -6,7 +6,7 @@ from transformers import BertTokenizerFast, BertModel, BitsAndBytesConfig, AutoT
 import numpy as np
 from torch import nn
 from peft import PeftModel, LoraConfig, prepare_model_for_kbit_training, get_peft_model, TaskType
-from sentence_transformers import SentenceTransformer
+from transformers import AutoTokenizer, AutoModel
 
 def merge_data(data):
     merged_data = []

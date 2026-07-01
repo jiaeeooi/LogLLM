@@ -7,6 +7,7 @@ import numpy as np
 from torch import nn
 from peft import PeftModel, LoraConfig, prepare_model_for_kbit_training, get_peft_model, TaskType
 from transformers import AutoTokenizer, AutoModel
+import torch.nn.functional as F
 
 def merge_data(data):
     merged_data = []
@@ -102,11 +103,16 @@ class LogLLM(nn.Module):
         #self.projector = nn.Linear(self.Bert_model.config.hidden_size, self.Llama_model.config.hidden_size, device=device)
         # self.projector = nn.Linear(self.Bert_model.config.hidden_size, self.Llama_model.config.hidden_size).half().to(device)
 
-        self.Bert_model = SentenceTransformer(Bert_path, device=str(device))
-        self.Bert_tokenizer = self.Bert_model.tokenizer
+        self.Bert_tokenizer = AutoTokenizer.from_pretrained(Bert_path)
+        self.Bert_model = AutoModel.from_pretrained(
+            Bert_path,
+            quantization_config=bnb_config,
+            low_cpu_mem_usage=True,
+            device_map=device
+        )
 
         self.projector = nn.Linear(
-            self.Bert_model.get_sentence_embedding_dimension(),
+            self.Bert_model.config.hidden_size,
             self.Llama_model.config.hidden_size,
             device=device
         )
@@ -213,12 +219,20 @@ class LogLLM(nn.Module):
         '''
         batch_size = len(labels)
 
-        #outputs = self.Bert_model(**inputs).pooler_output  # dim = 768
-        outputs = self.Bert_model({
-            "input_ids": inputs["input_ids"],
-            "attention_mask": inputs["attention_mask"]
-        })["sentence_embedding"]
-        outputs = outputs.float()
+        # SENTENCE BERT
+        # outputs = self.Bert_model(**inputs).pooler_output  # dim = 768
+        outputs = self.Bert_model(**inputs)
+        last_hidden = outputs.last_hidden_state
+        attention_mask = inputs["attention_mask"].unsqueeze(-1)
+        sentence_embedding = (
+            (last_hidden * attention_mask).sum(dim=1)
+            / attention_mask.sum(dim=1).clamp(min=1)
+        )
+        sentence_embedding = F.normalize(sentence_embedding, p=2, dim=1)
+        outputs = sentence_embedding.float()
+        ###
+
+        #outputs = outputs.float()
         outputs = self.projector(outputs)
         outputs = outputs.half()
 
@@ -274,12 +288,20 @@ class LogLLM(nn.Module):
         '''
         batch_size = len(seq_positions) + 1
 
-        #outputs = self.Bert_model(**inputs).pooler_output  # dim = 768
-        outputs = self.Bert_model({
-            "input_ids": inputs["input_ids"],
-            "attention_mask": inputs["attention_mask"]
-        })["sentence_embedding"]
-        outputs = outputs.float()
+        # SENTENCE BERT
+        # outputs = self.Bert_model(**inputs).pooler_output  # dim = 768
+        outputs = self.Bert_model(**inputs)
+        last_hidden = outputs.last_hidden_state
+        attention_mask = inputs["attention_mask"].unsqueeze(-1)
+        sentence_embedding = (
+            (last_hidden * attention_mask).sum(dim=1)
+            / attention_mask.sum(dim=1).clamp(min=1)
+        )
+        sentence_embedding = F.normalize(sentence_embedding, p=2, dim=1)
+        outputs = sentence_embedding.float()
+        ###
+
+        #outputs = outputs.float()
         outputs = self.projector(outputs)
         outputs = outputs.half()
 

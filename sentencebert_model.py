@@ -144,6 +144,12 @@ class LogLLM(nn.Module):
                 torch_dtype=torch.float16,
             )
             '''
+            self.Bert_model = AutoModel.from_pretrained(
+                Bert_ft_path,
+                quantization_config=bnb_config,
+                low_cpu_mem_usage=True,
+                device_map=device
+            )
             self.projector.load_state_dict(torch.load(projector_path, map_location=device, weights_only=True))
         else:
             print(f'Creating peft model.')
@@ -172,7 +178,7 @@ class LogLLM(nn.Module):
         Bert_ft_path = os.path.join(path,'Bert_ft')
         projector_path = os.path.join(path,'projector.pt')
         self.Llama_model.save_pretrained(Llama_ft_path, safe_serialization = True)
-        #self.Bert_model.save_pretrained(Bert_ft_path, safe_serialization =True)
+        self.Bert_model.save_pretrained(Bert_ft_path, safe_serialization =True)
         torch.save(self.projector.state_dict(), projector_path)
 
 
@@ -197,8 +203,7 @@ class LogLLM(nn.Module):
         for name, param in self.projector.named_parameters():
             param.requires_grad = True
         for name, param in self.Bert_model.named_parameters():
-            if 'lora' in name:
-                param.requires_grad = False ###
+            param.requires_grad = True ###
         for name, param in self.Llama_model.named_parameters():
             param.requires_grad = False
 
@@ -207,8 +212,7 @@ class LogLLM(nn.Module):
         for name, param in self.projector.named_parameters():
             param.requires_grad = True
         for name, param in self.Bert_model.named_parameters():
-            if 'lora' in name:
-                param.requires_grad = False ###
+            param.requires_grad = True ###
         for name, param in self.Llama_model.named_parameters():
             if 'lora' in name:
                 param.requires_grad = True

@@ -136,20 +136,24 @@ class LogLLM(nn.Module):
                 is_trainable=is_train_mode,
                 torch_dtype=torch.float16,
             )
+            '''
             self.Bert_model = PeftModel.from_pretrained(
                 self.Bert_model,
                 Bert_ft_path,
                 is_trainable=is_train_mode,
                 torch_dtype=torch.float16,
             )
+            '''
             self.projector.load_state_dict(torch.load(projector_path, map_location=device, weights_only=True))
         else:
             print(f'Creating peft model.')
+            '''
             Bert_peft_config = LoraConfig(task_type=TaskType.FEATURE_EXTRACTION,
                                           r=4,
                                           lora_alpha=32,
                                           lora_dropout=0.01)
             self.Bert_model = get_peft_model(self.Bert_model, Bert_peft_config)
+            '''
 
             Llama_peft_config = LoraConfig(
                 r=8,
@@ -168,7 +172,7 @@ class LogLLM(nn.Module):
         Bert_ft_path = os.path.join(path,'Bert_ft')
         projector_path = os.path.join(path,'projector.pt')
         self.Llama_model.save_pretrained(Llama_ft_path, safe_serialization = True)
-        self.Bert_model.save_pretrained(Bert_ft_path, safe_serialization =True)
+        #self.Bert_model.save_pretrained(Bert_ft_path, safe_serialization =True)
         torch.save(self.projector.state_dict(), projector_path)
 
 

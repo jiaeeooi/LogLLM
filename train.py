@@ -40,7 +40,8 @@ ROOT_DIR = Path(__file__).parent
 #ft_path = os.path.join(ROOT_DIR, r"ft_model_{}".format(dataset_name))
 #ft_path = f"/content/drive/MyDrive/LogLLM/results/ft_model_{dataset_name}"
 #ft_path = f"/content/drive/MyDrive/LogLLM/results/ft_model_{dataset_name}_meanpool"
-ft_path = f"/content/drive/MyDrive/LogLLM/results/ft_model_{dataset_name}_mpnet"
+#ft_path = f"/content/drive/MyDrive/LogLLM/results/ft_model_{dataset_name}_mpnet"
+ft_path = f"/content/drive/MyDrive/LogLLM/results/ft_model_{dataset_name}_mpnet_finetune"
 
 device = torch.device("cuda:0")
 

@@ -151,6 +151,7 @@ class LogLLM(nn.Module):
                                           lora_dropout=0.01,
                                           target_modules=["q", "v"])
             self.Bert_model = get_peft_model(self.Bert_model, Bert_peft_config)
+            self.Bert_model.print_trainable_parameters()
 
             Llama_peft_config = LoraConfig(
                 r=8,

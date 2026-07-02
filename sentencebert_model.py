@@ -203,7 +203,8 @@ class LogLLM(nn.Module):
         for name, param in self.projector.named_parameters():
             param.requires_grad = True
         for name, param in self.Bert_model.named_parameters():
-            param.requires_grad = True ###
+            if 'lora' in name:
+                param.requires_grad = True
         for name, param in self.Llama_model.named_parameters():
             param.requires_grad = False
 
@@ -212,7 +213,8 @@ class LogLLM(nn.Module):
         for name, param in self.projector.named_parameters():
             param.requires_grad = True
         for name, param in self.Bert_model.named_parameters():
-            param.requires_grad = True ###
+            if 'lora' in name:
+                param.requires_grad = True
         for name, param in self.Llama_model.named_parameters():
             if 'lora' in name:
                 param.requires_grad = True

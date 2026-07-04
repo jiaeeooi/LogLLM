@@ -5,8 +5,8 @@ import numpy as np
 import torch
 from torch.utils.data import DataLoader
 from tqdm import tqdm
-#from model import LogLLM
-from sentencebert_model import LogLLM
+from model import LogLLM
+#from sentencebert_model import LogLLM
 from customDataset import CustomDataset, CustomCollator
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
 

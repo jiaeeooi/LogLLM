@@ -204,12 +204,12 @@ class LogLLM(nn.Module):
         '''
         batch_size = len(labels)
 
+        outputs = self.Bert_model(**inputs).pooler_output  # dim = 768
         # MEAN POOLING
-        # outputs = self.Bert_model(**inputs).pooler_output  # dim = 768
-        bert_outputs = self.Bert_model(**inputs)
-        last_hidden = bert_outputs.last_hidden_state
-        attention_mask = inputs["attention_mask"].unsqueeze(-1)
-        outputs = (last_hidden * attention_mask).sum(dim=1) / attention_mask.sum(dim=1).clamp(min=1)
+        #bert_outputs = self.Bert_model(**inputs)
+        #last_hidden = bert_outputs.last_hidden_state
+        #attention_mask = inputs["attention_mask"].unsqueeze(-1)
+        #outputs = (last_hidden * attention_mask).sum(dim=1) / attention_mask.sum(dim=1).clamp(min=1)
         ###
 
         outputs = outputs.float()
@@ -268,12 +268,12 @@ class LogLLM(nn.Module):
         '''
         batch_size = len(seq_positions) + 1
 
+        outputs = self.Bert_model(**inputs).pooler_output  # dim = 768
         # MEAN POOLING
-        # outputs = self.Bert_model(**inputs).pooler_output  # dim = 768
-        bert_outputs = self.Bert_model(**inputs)
-        last_hidden = bert_outputs.last_hidden_state
-        attention_mask = inputs["attention_mask"].unsqueeze(-1)
-        outputs = (last_hidden * attention_mask).sum(dim=1) / attention_mask.sum(dim=1).clamp(min=1)
+        #bert_outputs = self.Bert_model(**inputs)
+        #last_hidden = bert_outputs.last_hidden_state
+        #attention_mask = inputs["attention_mask"].unsqueeze(-1)
+        #outputs = (last_hidden * attention_mask).sum(dim=1) / attention_mask.sum(dim=1).clamp(min=1)
         ###
 
         outputs = outputs.float()

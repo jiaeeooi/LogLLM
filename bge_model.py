@@ -108,7 +108,8 @@ class LogLLM(nn.Module):
             Bert_path,
             quantization_config=bnb_config,
             low_cpu_mem_usage=True,
-            device_map=device
+            device_map=device,
+            trust_remote_code=True,
         )
 
         self.projector = nn.Linear(

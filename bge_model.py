@@ -200,8 +200,7 @@ class LogLLM(nn.Module):
         for name, param in self.projector.named_parameters():
             param.requires_grad = True
         for name, param in self.Bert_model.named_parameters():
-            if 'lora' in name:
-                param.requires_grad = True
+            param.requires_grad = False ###
         for name, param in self.Llama_model.named_parameters():
             param.requires_grad = False
 
@@ -210,8 +209,7 @@ class LogLLM(nn.Module):
         for name, param in self.projector.named_parameters():
             param.requires_grad = True
         for name, param in self.Bert_model.named_parameters():
-            if 'lora' in name:
-                param.requires_grad = True
+            param.requires_grad = False ###
         for name, param in self.Llama_model.named_parameters():
             if 'lora' in name:
                 param.requires_grad = True
@@ -226,8 +224,9 @@ class LogLLM(nn.Module):
         '''
         batch_size = len(labels)
 
-        # SENTENCE BERT
+        '''
         # outputs = self.Bert_model(**inputs).pooler_output  # dim = 768
+        # SENTENCE BERT
         outputs = self.Bert_model(**inputs)
         last_hidden = outputs.last_hidden_state
         attention_mask = inputs["attention_mask"].unsqueeze(-1)
@@ -238,6 +237,12 @@ class LogLLM(nn.Module):
         sentence_embedding = F.normalize(sentence_embedding, p=2, dim=1)
         outputs = sentence_embedding.float()
         ###
+        '''
+
+        # BGE
+        outputs = self.Bert_model(**inputs)
+        outputs = outputs.last_hidden_state[:, 0] # CLS / first token
+        outputs = F.normalize(outputs.float(), p=2, dim=1) # normalize embedding before projector
 
         #outputs = outputs.float()
         outputs = self.projector(outputs)
@@ -295,8 +300,9 @@ class LogLLM(nn.Module):
         '''
         batch_size = len(seq_positions) + 1
 
-        # SENTENCE BERT
+        '''
         # outputs = self.Bert_model(**inputs).pooler_output  # dim = 768
+        # SENTENCE BERT
         outputs = self.Bert_model(**inputs)
         last_hidden = outputs.last_hidden_state
         attention_mask = inputs["attention_mask"].unsqueeze(-1)
@@ -307,6 +313,12 @@ class LogLLM(nn.Module):
         sentence_embedding = F.normalize(sentence_embedding, p=2, dim=1)
         outputs = sentence_embedding.float()
         ###
+        '''
+
+        # BGE
+        outputs = self.Bert_model(**inputs)
+        outputs = outputs.last_hidden_state[:, 0] # CLS / first token
+        outputs = F.normalize(outputs.float(), p=2, dim=1) # normalize embedding before projector
 
         #outputs = outputs.float()
         outputs = self.projector(outputs)

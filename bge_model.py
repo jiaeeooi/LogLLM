@@ -224,27 +224,26 @@ class LogLLM(nn.Module):
         '''
         batch_size = len(labels)
 
-        '''
         # outputs = self.Bert_model(**inputs).pooler_output  # dim = 768
-        # SENTENCE BERT
-        outputs = self.Bert_model(**inputs)
-        last_hidden = outputs.last_hidden_state
-        attention_mask = inputs["attention_mask"].unsqueeze(-1)
-        sentence_embedding = (
-            (last_hidden * attention_mask).sum(dim=1)
-            / attention_mask.sum(dim=1).clamp(min=1)
-        )
-        sentence_embedding = F.normalize(sentence_embedding, p=2, dim=1)
-        outputs = sentence_embedding.float()
-        ###
-        '''
 
-        # BGE
+        '''
+        # BGE + CLS Pooling
         outputs = self.Bert_model(**inputs)
         outputs = outputs.last_hidden_state[:, 0] # CLS / first token
         outputs = F.normalize(outputs.float(), p=2, dim=1) # normalize embedding before projector
 
         #outputs = outputs.float()
+        outputs = self.projector(outputs)
+        outputs = outputs.half()
+        '''
+
+        # BGE + Mean Pooling
+        outputs = self.Bert_model(**inputs)
+        last_hidden = outputs.last_hidden_state
+        attention_mask = inputs["attention_mask"].unsqueeze(-1)
+        outputs = (last_hidden * attention_mask).sum(dim=1) / attention_mask.sum(dim=1).clamp(min=1)
+        outputs = F.normalize(outputs.float(), p=2, dim=1)
+        
         outputs = self.projector(outputs)
         outputs = outputs.half()
 
@@ -300,27 +299,26 @@ class LogLLM(nn.Module):
         '''
         batch_size = len(seq_positions) + 1
 
-        '''
         # outputs = self.Bert_model(**inputs).pooler_output  # dim = 768
-        # SENTENCE BERT
-        outputs = self.Bert_model(**inputs)
-        last_hidden = outputs.last_hidden_state
-        attention_mask = inputs["attention_mask"].unsqueeze(-1)
-        sentence_embedding = (
-            (last_hidden * attention_mask).sum(dim=1)
-            / attention_mask.sum(dim=1).clamp(min=1)
-        )
-        sentence_embedding = F.normalize(sentence_embedding, p=2, dim=1)
-        outputs = sentence_embedding.float()
-        ###
-        '''
 
-        # BGE
+        '''
+        # BGE + CLS Pooling
         outputs = self.Bert_model(**inputs)
         outputs = outputs.last_hidden_state[:, 0] # CLS / first token
         outputs = F.normalize(outputs.float(), p=2, dim=1) # normalize embedding before projector
 
         #outputs = outputs.float()
+        outputs = self.projector(outputs)
+        outputs = outputs.half()
+        '''
+
+        # BGE + Mean Pooling
+        outputs = self.Bert_model(**inputs)
+        last_hidden = outputs.last_hidden_state
+        attention_mask = inputs["attention_mask"].unsqueeze(-1)
+        outputs = (last_hidden * attention_mask).sum(dim=1) / attention_mask.sum(dim=1).clamp(min=1)
+        outputs = F.normalize(outputs.float(), p=2, dim=1)
+        
         outputs = self.projector(outputs)
         outputs = outputs.half()
 

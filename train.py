@@ -4,9 +4,9 @@ import numpy as np
 import torch
 from tqdm import tqdm
 from torch import nn
-#from model import LogLLM
+from model import LogLLM
 #from sentencebert_model import LogLLM
-from bge_model import LogLLM
+#from bge_model import LogLLM
 #from qwen_model import LogLLM
 from torch.utils.data import DataLoader
 from customDataset import CustomDataset, CustomCollator, BalancedSampler

@@ -15,8 +15,9 @@ from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_sc
 max_content_len = 100
 max_seq_len = 128
 batch_size = 32
-dataset_name = 'Thunderbird'   # 'Thunderbird' 'HDFS_v1'  'BGL'  'Liberty‘
-data_path = "/content/drive/MyDrive/LogLLM/Thunderbird/test.csv"
+dataset_name = 'BGL'   # 'Thunderbird' 'HDFS_v1'  'BGL'  'Liberty'
+data_path = "/content/drive/MyDrive/LogLLM/BGL/bgl_test.csv"
+#data_path = "/content/drive/MyDrive/LogLLM/Thunderbird/test.csv"
 
 Bert_path = "bert-base-uncased"
 #Bert_path = "sentence-transformers/all-mpnet-base-v2"
@@ -27,7 +28,8 @@ Llama_path = "meta-llama/Meta-Llama-3-8B"
 ROOT_DIR = Path(__file__).parent
 #ft_path = os.path.join(ROOT_DIR, r"ft_model_{}".format(dataset_name))
 #ft_path = f"/content/drive/MyDrive/LogLLM/results/ft_model_{dataset_name}"
-ft_path = f"/content/drive/MyDrive/LogLLM/results/ft_model_{dataset_name}_meanpool"
+ft_path = f"/content/drive/MyDrive/LogLLM/results/ft_model_{dataset_name}_2"
+#ft_path = f"/content/drive/MyDrive/LogLLM/results/ft_model_{dataset_name}_meanpool"
 #ft_path = f"/content/drive/MyDrive/LogLLM/results/ft_model_{dataset_name}_mpnet"
 #ft_path = f"/content/drive/MyDrive/LogLLM/results/ft_model_{dataset_name}_mpnet_finetune"
 #ft_path = f"/content/drive/MyDrive/LogLLM/results/ft_model_{dataset_name}_bgem3cls"

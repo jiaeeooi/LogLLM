@@ -17,7 +17,7 @@ n_epochs_1 = 1
 n_epochs_2_1 = 1
 n_epochs_2_2 = 1
 n_epochs_3 = 2
-dataset_name = 'Thunderbird'  # 'Thunderbird' 'HDFS_v1' 'BGL'   'Liberty'
+dataset_name = ''  # 'Thunderbird' 'HDFS_v1' 'BGL'   'Liberty'
 batch_size = 16
 micro_batch_size = 4
 gradient_accumulation_steps = batch_size // micro_batch_size
@@ -30,7 +30,8 @@ lr_3 = 5e-5
 max_content_len = 100
 max_seq_len = 128
 
-data_path = "/content/drive/MyDrive/LogLLM/Thunderbird/train.csv"
+data_path = "/content/drive/MyDrive/LogLLM/BGL/bgl_train.csv"
+#data_path = "/content/drive/MyDrive/LogLLM/Thunderbird/train.csv"
 
 min_less_portion = 0.3
 
@@ -43,7 +44,8 @@ Llama_path = "meta-llama/Meta-Llama-3-8B"
 ROOT_DIR = Path(__file__).parent
 #ft_path = os.path.join(ROOT_DIR, r"ft_model_{}".format(dataset_name))
 #ft_path = f"/content/drive/MyDrive/LogLLM/results/ft_model_{dataset_name}"
-ft_path = f"/content/drive/MyDrive/LogLLM/results/ft_model_{dataset_name}_meanpool"
+ft_path = f"/content/drive/MyDrive/LogLLM/results/ft_model_{dataset_name}_2"
+#ft_path = f"/content/drive/MyDrive/LogLLM/results/ft_model_{dataset_name}_meanpool"
 #ft_path = f"/content/drive/MyDrive/LogLLM/results/ft_model_{dataset_name}_mpnet"
 #ft_path = f"/content/drive/MyDrive/LogLLM/results/ft_model_{dataset_name}_mpnet_finetune"
 #ft_path = f"/content/drive/MyDrive/LogLLM/results/ft_model_{dataset_name}_bgem3cls"

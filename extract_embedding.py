@@ -23,8 +23,8 @@ device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 output_dir = "/content/drive/MyDrive/LogLLM/results/" f"embeddings_{dataset_name}"
 os.makedirs(output_dir, exist_ok=True) 
-embedding_path = os.path.join( output_dir, f"{dataset_name}_embeddings_{configuration}.npy" ) 
-metadata_path = os.path.join( output_dir, f"{dataset_name}_embedding_metadata_{configuration}.csv" )
+embedding_path = os.path.join( output_dir, f"embeddings_{configuration}.npy" ) 
+metadata_path = os.path.join( output_dir, f"embedding_metadata_{configuration}.csv" )
 
 patterns = [
     r'True',
@@ -107,12 +107,37 @@ def load_logs():
                 "log_id": log_id, 
                 "item_label": int(item_labels[log_id]), 
                 "window_label": int(row["Label"]), 
-                "content": log }) 
+                "content": log 
+            }) 
                 
-        metadata_df = pd.DataFrame(metadata) 
-        print(f"\nNumber of windows: {len(df)}") 
-        print(f"Number of individual logs: {len(all_logs)}") 
-        return all_logs, metadata_df
+    metadata_df = pd.DataFrame(metadata) 
+    print(f"\nNumber of windows: {len(df)}") 
+    print(f"Number of individual logs: {len(all_logs)}") 
+    return all_logs, metadata_df
+
+def extract_embeddings(tokenizer, bert, logs): 
+    all_embeddings = [] 
+    print("\nExtracting embeddings...") 
+    for start in tqdm(range(0, len(logs), batch_size)): 
+        batch_logs = logs[start:start + batch_size] 
+        inputs = tokenizer(batch_logs, return_tensors="pt", max_length=max_content_len, padding=True, truncation=True) 
+        inputs = {key: value.to(device) for key, value in inputs.items()} 
+        with torch.no_grad(): 
+            bert_outputs = bert(**inputs) 
+            if pooling == "cls": 
+                embeddings = bert_outputs.pooler_output 
+            elif pooling == "mean": 
+                hidden = bert_outputs.last_hidden_state 
+                attention_mask = ( inputs["attention_mask"] .unsqueeze(-1) .expand(hidden.size()) .float() ) 
+                sum_embeddings = ( hidden * attention_mask ).sum(dim=1) 
+                sum_mask = attention_mask.sum(dim=1) 
+                embeddings = ( sum_embeddings / sum_mask.clamp(min=1e-9) ) 
+            else:
+                raise ValueError( f"Unknown pooling method: {pooling}. " f"Use 'cls' or 'mean'." ) 
+            embeddings = embeddings.float().cpu().numpy() 
+            all_embeddings.append(embeddings) 
+    embeddings = np.concatenate( all_embeddings, axis=0 ) 
+    return embeddings
 
 
 

@@ -139,6 +139,34 @@ def extract_embeddings(tokenizer, bert, logs):
     embeddings = np.concatenate( all_embeddings, axis=0 ) 
     return embeddings
 
+if __name__ == "__main__":
+    print(f"Dataset: {dataset_name}") 
+    print(f"Pooling: {pooling}") 
+    print(f"Base encoder: {Bert_path}") 
+    print(f"Fine-tuned: {ft_bert_path is not None}") 
+    print(f"Device: {device}") 
+    print(f"Output dir: {output_dir}")
+
+    tokenizer, bert = load_bert()
+    logs, metadata_df = load_logs()
+    embeddings = extract_embeddings(tokenizer, bert, logs)
+
+    print(f"\nEmbedding shape:{embeddings.shape}") 
+    print( f"\nEmbedding dimension: {embeddings.shape[1]}" ) 
+    print( f"Number of embeddings: {embeddings.shape[0]}" )
+
+    assert len(embeddings) == len(metadata_df)
+
+    np.save(embedding_path, embeddings) 
+    metadata_df.to_csv(metadata_path, index=False) 
+    
+    print("\nSaved:") 
+    print(embedding_path) 
+    print(metadata_path) 
+    print("\nFinished.")
+
+
+
 
 
 

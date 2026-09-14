@@ -13,7 +13,9 @@ from peft import PeftModel
 dataset_name = "BGL" 
 data_path = "/content/drive/MyDrive/LogLLM/BGL/bgl_test.csv"
 Bert_path = "bert-base-uncased"
-ft_path = f"/content/drive/MyDrive/LogLLM/results/ft_model_{dataset_name}_2"
+ROOT_DIR = Path(__file__).parent
+ft_path = os.path.join(ROOT_DIR, r"ft_model_{}".format(dataset_name))
+#ft_path = f"/content/drive/MyDrive/LogLLM/results/ft_model_{dataset_name}_2"
 configuration = "original"
 pooling = "cls" 
 

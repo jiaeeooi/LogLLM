@@ -2,6 +2,7 @@ import os
 import re
 from pathlib import Path
 import numpy as np
+import pandas as pd #
 import torch
 from torch.utils.data import DataLoader
 from tqdm import tqdm
@@ -95,6 +96,7 @@ def evalModel(model, dataloader):
 
     print(f'precision: {precision}, recall: {recall}, f1: {f}, acc: {acc}')
 
+    return preds #
 
 if __name__ == '__main__':
     print(f'dataset: {data_path}')
@@ -113,4 +115,23 @@ if __name__ == '__main__':
         drop_last=False
     )
 
-    evalModel(model, dataloader)
+    #evalModel(model, dataloader)
+    preds = evalModel(model, dataloader) #
+
+    # NEW: Save predections to a new CSV
+    test_df = pd.read_csv(data_path)
+
+    assert len(preds) == len(test_df), ( 
+        f"Number of predictions ({len(preds)}) does not match " 
+        f"number of test windows ({len(test_df)})" 
+    ) 
+
+    test_df['Pred_Label'] = preds 
+
+    input_path = Path(data_path) 
+    output_path = input_path.parent / f"{input_path.stem}_predictions.csv" 
+    
+    # Save new CSV 
+    test_df.to_csv(output_path, index=False) 
+    
+    print(f'Predictions saved to: {output_path}')

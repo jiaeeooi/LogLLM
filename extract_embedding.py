@@ -14,7 +14,7 @@ dataset_name = "BGL"
 data_path = "/content/drive/MyDrive/LogLLM/BGL/bgl_test.csv"
 Bert_path = "bert-base-uncased"
 ft_path = f"/content/drive/MyDrive/LogLLM/results/ft_model_{dataset_name}_2"
-configuration = "orginal"
+configuration = "original"
 pooling = "cls" 
 
 max_content_len = 100 

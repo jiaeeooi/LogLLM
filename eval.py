@@ -19,6 +19,8 @@ batch_size = 32
 dataset_name = 'BGL'   # 'Thunderbird' 'HDFS_v1'  'BGL'  'Liberty'
 data_path = "/content/drive/MyDrive/LogLLM/BGL/bgl_test.csv"
 #data_path = "/content/drive/MyDrive/LogLLM/Thunderbird/test.csv"
+configuration = "original"
+output_path = "/content/drive/MyDrive/LogLLM/BGL/test_predictions_original.csv"
 
 Bert_path = "bert-base-uncased"
 #Bert_path = "sentence-transformers/all-mpnet-base-v2"
@@ -127,11 +129,7 @@ if __name__ == '__main__':
     ) 
 
     test_df['Pred_Label'] = preds 
-
-    input_path = Path(data_path) 
-    output_path = input_path.parent / f"{input_path.stem}_predictions.csv" 
     
     # Save new CSV 
     test_df.to_csv(output_path, index=False) 
-    
     print(f'Predictions saved to: {output_path}')

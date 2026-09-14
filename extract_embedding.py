@@ -80,9 +80,7 @@ def load_logs():
     all_logs = [] 
     metadata = [] 
     for window_id, row in df.iterrows(): 
-        # Content contains 100 logs separated by ' ;-; ' 
         logs = str(row["Content"]).split(" ;-; ") 
-        # item_Label contains the label of every individual log 
         item_labels_raw = row["item_Label"] 
         try: 
             item_labels = ast.literal_eval(item_labels_raw) 
@@ -99,7 +97,6 @@ def load_logs():
             ) 
         
         for log_id, log in enumerate(logs): 
-            # Apply exactly the same preprocessing 
             log = replace_patterns(log) 
             all_logs.append(log) 
             metadata.append({ 
@@ -127,11 +124,9 @@ def extract_embeddings(tokenizer, bert, logs):
             if pooling == "cls": 
                 embeddings = bert_outputs.pooler_output 
             elif pooling == "mean": 
-                hidden = bert_outputs.last_hidden_state 
-                attention_mask = ( inputs["attention_mask"] .unsqueeze(-1) .expand(hidden.size()) .float() ) 
-                sum_embeddings = ( hidden * attention_mask ).sum(dim=1) 
-                sum_mask = attention_mask.sum(dim=1) 
-                embeddings = ( sum_embeddings / sum_mask.clamp(min=1e-9) ) 
+                last_hidden = bert_outputs.last_hidden_state
+                attention_mask = inputs["attention_mask"].unsqueeze(-1)
+                embeddings = (last_hidden * attention_mask).sum(dim=1) / attention_mask.sum(dim=1).clamp(min=1)
             else:
                 raise ValueError( f"Unknown pooling method: {pooling}. " f"Use 'cls' or 'mean'." ) 
             embeddings = embeddings.float().cpu().numpy() 
@@ -164,11 +159,4 @@ if __name__ == "__main__":
     print(embedding_path) 
     print(metadata_path) 
     print("\nFinished.")
-
-
-
-
-
-
-
 

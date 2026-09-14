@@ -39,13 +39,38 @@ ft_path = os.path.join(ROOT_DIR, r"ft_model_{}".format(dataset_name))
 
 device = torch.device("cuda:0")
 
+patterns = [
+    r'True',
+    r'true',
+    r'False',
+    r'false',
+    r'\b(zero|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen|fifteen|sixteen|seventeen|eighteen|nineteen|twenty|thirty|forty|fifty|sixty|seventy|eighty|ninety|hundred|thousand|million|billion)\b',
+    r'\b(Mon|Monday|Tue|Tuesday|Wed|Wednesday|Thu|Thursday|Fri|Friday|Sat|Saturday|Sun|Sunday)\b',
+    r'\b(Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|Jun(?:e)?|Jul(?:y)?|Aug(?:ust)?|Sep(?:tember)?|Oct(?:ober)?|Nov(?:ember)?|Dec(?:ember)?)\s+(\d{1,2})\s+\b',
+    r'\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}(:\d{1,5})?', #  IP
+    r'([0-9A-Fa-f]{2}:){11}[0-9A-Fa-f]{2}',   # Special MAC
+    r'([0-9A-Fa-f]{2}:){5}[0-9A-Fa-f]{2}',   # MAC
+    r'[a-zA-Z0-9]*[:\.]*([/\\]+[^/\\\s\[\]]+)+[/\\]*',  # File Path
+    r'\b[0-9a-fA-F]{8}\b',
+    r'\b[0-9a-fA-F]{10}\b',
+    r'(\w+[\w\.]*)@(\w+[\w\.]*)\-(\w+[\w\.]*)',
+    r'(\w+[\w\.]*)@(\w+[\w\.]*)',
+    r'[a-zA-Z\.\:\-\_]*\d[a-zA-Z0-9\.\:\-\_]*',  # word have number
+]
+
+combined_pattern = '|'.join(patterns)
+
+def replace_patterns(text):
+    text = re.sub(r'[\.]{3,}', '.. ', text)    # Replace multiple '.' with '.. '
+    text = re.sub(combined_pattern, '<*>', text)
+    return text
+
 print(
 f'dataset_name: {dataset_name}\n'
 f'batch_size: {batch_size}\n'
 f'max_content_len: {max_content_len}\n'
 f'max_seq_len: {max_seq_len}\n'
 f'device: {device}')
-
 
 def evalModel(model, dataloader):
     model.eval()
@@ -122,13 +147,16 @@ if __name__ == '__main__':
     # NEW: Save predections to a new CSV
     test_df = pd.read_csv(data_path)
 
-    assert len(preds) == len(test_df), ( 
-        f"Number of predictions ({len(preds)}) does not match " 
-        f"number of test windows ({len(test_df)})" 
-    ) 
+    test_df['Preprocessed_Content'] = test_df['Content'].apply(
+        lambda x: ' ;-; '.join(
+            replace_patterns(log)
+            for log in str(x).split(' ;-; ')
+        )
+    )
 
-    test_df['Pred_Label'] = preds 
-    
-    # Save new CSV 
+    assert len(preds) == len(test_df)
+
+    test_df['Predicted_Label'] = preds 
+
     test_df.to_csv(output_path, index=False) 
     print(f'Predictions saved to: {output_path}')

@@ -237,9 +237,8 @@ class LogLLM(nn.Module):
             sequence_lengths
         ]
 
-        outputs = F.normalize(outputs.float(), p=2, dim=1)
-
-        #outputs = outputs.float()
+        #outputs = F.normalize(outputs.float(), p=2, dim=1)
+        outputs = outputs.float()
         outputs = self.projector(outputs)
         outputs = outputs.half()
 

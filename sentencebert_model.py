@@ -221,8 +221,9 @@ class LogLLM(nn.Module):
         '''
         batch_size = len(labels)
 
-        # SENTENCE BERT
         # outputs = self.Bert_model(**inputs).pooler_output  # dim = 768
+
+        # SENTENCE BERT
         outputs = self.Bert_model(**inputs)
         last_hidden = outputs.last_hidden_state
         attention_mask = inputs["attention_mask"].unsqueeze(-1)
@@ -230,11 +231,10 @@ class LogLLM(nn.Module):
             (last_hidden * attention_mask).sum(dim=1)
             / attention_mask.sum(dim=1).clamp(min=1)
         )
-        sentence_embedding = F.normalize(sentence_embedding, p=2, dim=1)
-        outputs = sentence_embedding.float()
-        ###
+        #sentence_embedding = F.normalize(sentence_embedding, p=2, dim=1)
+        outputs = sentence_embedding
 
-        #outputs = outputs.float()
+        outputs = outputs.float()
         outputs = self.projector(outputs)
         outputs = outputs.half()
 
@@ -290,8 +290,9 @@ class LogLLM(nn.Module):
         '''
         batch_size = len(seq_positions) + 1
 
-        # SENTENCE BERT
         # outputs = self.Bert_model(**inputs).pooler_output  # dim = 768
+
+        # SENTENCE BERT
         outputs = self.Bert_model(**inputs)
         last_hidden = outputs.last_hidden_state
         attention_mask = inputs["attention_mask"].unsqueeze(-1)
@@ -299,11 +300,10 @@ class LogLLM(nn.Module):
             (last_hidden * attention_mask).sum(dim=1)
             / attention_mask.sum(dim=1).clamp(min=1)
         )
-        sentence_embedding = F.normalize(sentence_embedding, p=2, dim=1)
-        outputs = sentence_embedding.float()
-        ###
+        #sentence_embedding = F.normalize(sentence_embedding, p=2, dim=1)
+        outputs = sentence_embedding
 
-        #outputs = outputs.float()
+        outputs = outputs.float()
         outputs = self.projector(outputs)
         outputs = outputs.half()
 

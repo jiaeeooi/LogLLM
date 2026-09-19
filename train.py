@@ -4,8 +4,8 @@ import numpy as np
 import torch
 from tqdm import tqdm
 from torch import nn
-from model import LogLLM
-#from sentencebert_model import LogLLM
+#from model import LogLLM
+from sentencebert_model import LogLLM
 #from bge_model import LogLLM
 #from qwen_model import LogLLM
 from torch.utils.data import DataLoader
@@ -35,8 +35,8 @@ data_path = "/content/drive/MyDrive/LogLLM/BGL/bgl_train.csv"
 
 min_less_portion = 0.3
 
-Bert_path = "bert-base-uncased"
-#Bert_path = "sentence-transformers/all-mpnet-base-v2"
+#Bert_path = "bert-base-uncased"
+Bert_path = "sentence-transformers/all-mpnet-base-v2"
 #Bert_path = "BAAI/bge-m3"
 #Bert_path = "Qwen/Qwen3-Embedding-0.6B"
 Llama_path = "meta-llama/Meta-Llama-3-8B"
@@ -45,7 +45,7 @@ ROOT_DIR = Path(__file__).parent
 #ft_path = os.path.join(ROOT_DIR, r"ft_model_{}".format(dataset_name))
 #ft_path = f"/content/drive/MyDrive/LogLLM/results/ft_model_{dataset_name}"
 #ft_path = f"/content/drive/MyDrive/LogLLM/results/ft_model_{dataset_name}_meanpool"
-#ft_path = f"/content/drive/MyDrive/LogLLM/results/ft_model_{dataset_name}_mpnet"
+ft_path = f"/content/drive/MyDrive/LogLLM/results/ft_model_{dataset_name}_mpnet"
 #ft_path = f"/content/drive/MyDrive/LogLLM/results/ft_model_{dataset_name}_mpnet_finetune"
 #ft_path = f"/content/drive/MyDrive/LogLLM/results/ft_model_{dataset_name}_bgem3cls"
 #ft_path = f"/content/drive/MyDrive/LogLLM/results/ft_model_{dataset_name}_bgem3mean"

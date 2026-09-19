@@ -226,17 +226,16 @@ class LogLLM(nn.Module):
 
         # outputs = self.Bert_model(**inputs).pooler_output  # dim = 768
 
-        '''
         # BGE + CLS Pooling
         outputs = self.Bert_model(**inputs)
         outputs = outputs.last_hidden_state[:, 0] # CLS / first token
-        outputs = F.normalize(outputs.float(), p=2, dim=1) # normalize embedding before projector
+        #outputs = F.normalize(outputs.float(), p=2, dim=1)
 
-        #outputs = outputs.float()
+        outputs = outputs.float()
         outputs = self.projector(outputs)
         outputs = outputs.half()
-        '''
 
+        '''
         # BGE + Mean Pooling
         outputs = self.Bert_model(**inputs)
         last_hidden = outputs.last_hidden_state
@@ -246,6 +245,7 @@ class LogLLM(nn.Module):
         
         outputs = self.projector(outputs)
         outputs = outputs.half()
+        '''
 
         seq_embeddings = torch.tensor_split(outputs, seq_positions)
 
@@ -301,17 +301,16 @@ class LogLLM(nn.Module):
 
         # outputs = self.Bert_model(**inputs).pooler_output  # dim = 768
 
-        '''
         # BGE + CLS Pooling
         outputs = self.Bert_model(**inputs)
         outputs = outputs.last_hidden_state[:, 0] # CLS / first token
-        outputs = F.normalize(outputs.float(), p=2, dim=1) # normalize embedding before projector
+        #outputs = F.normalize(outputs.float(), p=2, dim=1)
 
-        #outputs = outputs.float()
+        outputs = outputs.float()
         outputs = self.projector(outputs)
         outputs = outputs.half()
-        '''
 
+        '''
         # BGE + Mean Pooling
         outputs = self.Bert_model(**inputs)
         last_hidden = outputs.last_hidden_state
@@ -321,6 +320,7 @@ class LogLLM(nn.Module):
         
         outputs = self.projector(outputs)
         outputs = outputs.half()
+        '''
 
         seq_embeddings = torch.tensor_split(outputs, seq_positions)
 

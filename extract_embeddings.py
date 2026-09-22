@@ -122,65 +122,34 @@ print(f"Embedding     : {embedding_path}")
 print(f"Metadata      : {metadata_path}")
 print("=" * 70)
 
-
-# ============================================================
-# 9. LOAD DATA
-# ============================================================
-
 print("\nLoading dataset...")
-
 df = pd.read_csv(data_path)
-
 print(f"Number of windows: {len(df)}")
 print(f"Columns: {list(df.columns)}")
-
-
-# ============================================================
-# 10. LOG PREPROCESSING
-# ============================================================
 
 patterns = [
     r'True',
     r'true',
     r'False',
     r'false',
-
-    r'\b(zero|one|two|three|four|five|six|seven|eight|nine|ten|'
-    r'eleven|twelve|thirteen|fourteen|fifteen|sixteen|seventeen|'
-    r'eighteen|nineteen|twenty|thirty|forty|fifty|sixty|seventy|'
-    r'eighty|ninety|hundred|thousand|million|billion)\b',
-
-    r'\b(Mon|Monday|Tue|Tuesday|Wed|Wednesday|Thu|Thursday|'
-    r'Fri|Friday|Sat|Saturday|Sun|Sunday)\b',
-
-    r'\b(Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|'
-    r'Jun(?:e)?|Jul(?:y)?|Aug(?:ust)?|Sep(?:tember)?|Oct(?:ober)?|'
-    r'Nov(?:ember)?|Dec(?:ember)?)\s+(\d{1,2})\s+\b',
-
-    r'\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}(:\d{1,5})?',
-
-    r'([0-9A-Fa-f]{2}:){11}[0-9A-Fa-f]{2}',
-
-    r'([0-9A-Fa-f]{2}:){5}[0-9A-Fa-f]{2}',
-
-    r'[a-zA-Z0-9]*[:\.]*([/\\]+[^/\\\s\[\]]+)+[/\\]*',
-
+    r'\b(zero|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen|fifteen|sixteen|seventeen|eighteen|nineteen|twenty|thirty|forty|fifty|sixty|seventy|eighty|ninety|hundred|thousand|million|billion)\b',
+    r'\b(Mon|Monday|Tue|Tuesday|Wed|Wednesday|Thu|Thursday|Fri|Friday|Sat|Saturday|Sun|Sunday)\b',
+    r'\b(Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|Jun(?:e)?|Jul(?:y)?|Aug(?:ust)?|Sep(?:tember)?|Oct(?:ober)?|Nov(?:ember)?|Dec(?:ember)?)\s+(\d{1,2})\s+\b',
+    r'\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}(:\d{1,5})?', #  IP
+    r'([0-9A-Fa-f]{2}:){11}[0-9A-Fa-f]{2}',   # Special MAC
+    r'([0-9A-Fa-f]{2}:){5}[0-9A-Fa-f]{2}',   # MAC
+    r'[a-zA-Z0-9]*[:\.]*([/\\]+[^/\\\s\[\]]+)+[/\\]*',  # File Path
     r'\b[0-9a-fA-F]{8}\b',
-
     r'\b[0-9a-fA-F]{10}\b',
-
     r'(\w+[\w\.]*)@(\w+[\w\.]*)\-(\w+[\w\.]*)',
-
     r'(\w+[\w\.]*)@(\w+[\w\.]*)',
-
-    r'[a-zA-Z\.\:\-\_]*\d[a-zA-Z0-9\.\:\-\_]*',
+    r'[a-zA-Z\.\:\-\_]*\d[a-zA-Z0-9\.\:\-\_]*',  # word have number
 ]
 
 combined_pattern = '|'.join(patterns)
 
-
 def replace_patterns(text):
-    text = re.sub(r'[\.]{3,}', '.. ', text)
+    text = re.sub(r'[\.]{3,}', '.. ', text)    # Replace multiple '.' with '.. '
     text = re.sub(combined_pattern, '<*>', text)
     return text
 

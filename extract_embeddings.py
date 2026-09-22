@@ -165,115 +165,52 @@ bnb_config = BitsAndBytesConfig(
 )
 
 def load_encoder():
-    # --------------------------------------------------------
-    # Author / Reproduced BERT
-    # --------------------------------------------------------
     if encoder_name in ["author", "reproduced"]:
+        tokenizer = BertTokenizerFast.from_pretrained("bert-base-uncased")
+        bert = BertModel.from_pretrained("bert-base-uncased", quantization_config=bnb_config, low_cpu_mem_usage=True, device_map="cuda:0" if torch.cuda.is_available() else None)
 
-        print("\nLoading BERT tokenizer...")
-
-        tokenizer = BertTokenizerFast.from_pretrained(
-            "bert-base-uncased"
-        )
-
-        print("Loading BERT model...")
-
-        bert = BertModel.from_pretrained(
-            "bert-base-uncased",
-            quantization_config=bnb_config,
-            device_map="cuda:0" if torch.cuda.is_available() else None,
-        )
-
-        # ----------------------------------------------------
-        # Load LoRA weights from LogLLM checkpoint
-        # ----------------------------------------------------
-        bert_ft_path = os.path.join(
-            ft_path,
-            "Bert_ft"
-        )
-
-        print(f"\nLoading BERT LoRA checkpoint:")
-        print(bert_ft_path)
+        bert_ft_path = os.path.join(ft_path, "Bert_ft")
 
         if not os.path.exists(bert_ft_path):
-            raise FileNotFoundError(
-                f"BERT LoRA checkpoint not found:\n{bert_ft_path}"
-            )
+            raise FileNotFoundError(f"BERT LoRA checkpoint not found:\n{bert_ft_path}")
 
         bert = PeftModel.from_pretrained(
             bert,
-            bert_ft_path
+            bert_ft_path,
+            is_trainable=False,
+            torch_dtype=torch.float16
         )
 
         bert.eval()
-
         return tokenizer, bert
 
-
-    # --------------------------------------------------------
-    # SBERT / MPNet
-    # --------------------------------------------------------
     elif encoder_name == "sbert":
-
-        print("\nLoading SBERT / MPNet tokenizer...")
-
-        tokenizer = AutoTokenizer.from_pretrained(
-            model_name
-        )
-
-        print("Loading SBERT / MPNet model...")
-
+        tokenizer = AutoTokenizer.from_pretrained(model_name)
         model = AutoModel.from_pretrained(
             model_name,
             quantization_config=bnb_config,
+            low_cpu_mem_usage=True,
             device_map="cuda:0" if torch.cuda.is_available() else None,
         )
 
         model.eval()
-
         return tokenizer, model
 
-
-    # --------------------------------------------------------
-    # BGE-M3
-    # --------------------------------------------------------
     elif encoder_name == "bge":
-
-        print("\nLoading BGE-M3 tokenizer...")
-
-        tokenizer = AutoTokenizer.from_pretrained(
-            model_name,
-            trust_remote_code=True
-        )
-
-        print("Loading BGE-M3 model...")
-
+        tokenizer = AutoTokenizer.from_pretrained(model_name)
         model = AutoModel.from_pretrained(
             model_name,
             quantization_config=bnb_config,
+            low_cpu_mem_usage=True,
             device_map="cuda:0" if torch.cuda.is_available() else None,
             trust_remote_code=True,
         )
 
         model.eval()
-
         return tokenizer, model
 
-
-    # --------------------------------------------------------
-    # Qwen3-Embedding-0.6B
-    # --------------------------------------------------------
     elif encoder_name == "qwen":
-
-        print("\nLoading Qwen tokenizer...")
-
-        tokenizer = AutoTokenizer.from_pretrained(
-            model_name,
-            trust_remote_code=True
-        )
-
-        print("Loading Qwen model...")
-
+        tokenizer = AutoTokenizer.from_pretrained(model_name)
         model = AutoModel.from_pretrained(
             model_name,
             quantization_config=bnb_config,
@@ -283,16 +220,10 @@ def load_encoder():
         )
 
         model.eval()
-
         return tokenizer, model
 
-
-# ============================================================
-# 12. LOAD MODEL
-# ============================================================
-
+# Load Model
 tokenizer, encoder = load_encoder()
-
 print("\nEncoder loaded successfully.")
 
 

@@ -1,29 +1,14 @@
 import os
 import re
 from pathlib import Path
-
 import numpy as np
 import pandas as pd
 import torch
-
 from tqdm import tqdm
-from transformers import (
-    AutoTokenizer,
-    AutoModel,
-    BertTokenizerFast,
-    BertModel,
-    BitsAndBytesConfig,
-)
+from transformers import AutoTokenizer, AutoModel, BertTokenizerFast, BertModel, BitsAndBytesConfig
 from peft import PeftModel
 
-
-# ============================================================
-# 1. CONFIGURATION
-# ============================================================
-
-# Change these two values
 dataset_name = "BGL"
-
 # Options:
 #   "author"
 #   "reproduced"
@@ -32,46 +17,32 @@ dataset_name = "BGL"
 #   "qwen"
 encoder_name = "bge"
 
-
 # ============================================================
 # 2. PATH CONFIGURATION
 # ============================================================
 
 ROOT_DIR = Path(__file__).parent
 
-# Add your three dataset paths here
+# Three dataset paths
 DATA_PATHS = {
     "BGL": "/content/drive/MyDrive/LogLLM/BGL/bgl_test.csv",
-
-    # Replace these with your actual paths
-    "Thunderbird": "/content/drive/MyDrive/LogLLM/Thunderbird/thunderbird_test.csv",
-    "ThirdDataset": "/content/drive/MyDrive/LogLLM/ThirdDataset/test.csv",
+    "Thunderbird": "/content/drive/MyDrive/LogLLM/Thunderbird/test.csv",
 }
-
 
 # Output directory
 RESULTS_DIR = Path("/content/drive/MyDrive/LogLLM/results")
 OUTPUT_DIR = RESULTS_DIR / f"embeddings_{dataset_name}"
 OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
-
-# ============================================================
-# 3. CHECK DATASET
-# ============================================================
-
+# Check Dataset
 if dataset_name not in DATA_PATHS:
     raise ValueError(
         f"Unknown dataset '{dataset_name}'. "
         f"Available datasets: {list(DATA_PATHS.keys())}"
     )
-
 data_path = DATA_PATHS[dataset_name]
 
-
-# ============================================================
-# 4. CHECK ENCODER
-# ============================================================
-
+# Check Encoder
 VALID_ENCODERS = [
     "author",
     "reproduced",
@@ -79,7 +50,6 @@ VALID_ENCODERS = [
     "bge",
     "qwen",
 ]
-
 if encoder_name not in VALID_ENCODERS:
     raise ValueError(
         f"Unknown encoder '{encoder_name}'. "

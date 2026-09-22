@@ -17,12 +17,9 @@ dataset_name = "BGL"
 #   "qwen"
 encoder_name = "bge"
 
-# ============================================================
-# 2. PATH CONFIGURATION
-# ============================================================
+# -------------------------------------------
 
 ROOT_DIR = Path(__file__).parent
-
 # Three dataset paths
 DATA_PATHS = {
     "BGL": "/content/drive/MyDrive/LogLLM/BGL/bgl_test.csv",
@@ -56,11 +53,6 @@ if encoder_name not in VALID_ENCODERS:
         f"Available encoders: {VALID_ENCODERS}"
     )
 
-
-# ============================================================
-# 5. ENCODER CONFIGURATION
-# ============================================================
-
 ENCODER_CONFIG = {
     "author": {
         "model_name": "bert-base-uncased",
@@ -93,70 +85,22 @@ ENCODER_CONFIG = {
     },
 }
 
-
 config = ENCODER_CONFIG[encoder_name]
 
 model_name = config["model_name"]
 pooling = config["pooling"]
 output_name = config["output_name"]
 
-
-# ============================================================
-# 6. CHECKPOINT PATHS
-# ============================================================
-
-# These paths correspond to your existing LogLLM checkpoints.
-#
-# IMPORTANT:
-# For SBERT/BGE/Qwen, these checkpoints are NOT used to load
-# the encoder weights. The encoder itself is loaded from
-# Hugging Face. The paths are kept here because they correspond
-# to your trained LogLLM experiments.
-
 if encoder_name == "author":
-
-    # Author's original checkpoint
-    ft_path = os.path.join(
-        ROOT_DIR,
-        f"ft_model_{dataset_name}"
-    )
-
+    ft_path = os.path.join(ROOT_DIR, r"ft_model_{}".format(dataset_name))
 elif encoder_name == "reproduced":
-
-    # Your reproduced baseline checkpoint
-    ft_path = (
-        f"/content/drive/MyDrive/LogLLM/results/"
-        f"ft_model_{dataset_name}"
-    )
-
+    ft_path = f"/content/drive/MyDrive/LogLLM/results/ft_model_{dataset_name}"
 elif encoder_name == "sbert":
-
-    # Your SBERT LogLLM checkpoint
-    ft_path = (
-        f"/content/drive/MyDrive/LogLLM/results/"
-        f"ft_model_{dataset_name}_mpnet"
-    )
-
+    ft_path = f"/content/drive/MyDrive/LogLLM/results/ft_model_{dataset_name}_mpnet"
 elif encoder_name == "bge":
-
-    # Your BGE-M3 LogLLM checkpoint
-    ft_path = (
-        f"/content/drive/MyDrive/LogLLM/results/"
-        f"ft_model_{dataset_name}_bgem3"
-    )
-
+    ft_path = f"/content/drive/MyDrive/LogLLM/results/ft_model_{dataset_name}_bgem3"
 elif encoder_name == "qwen":
-
-    # Your Qwen LogLLM checkpoint
-    ft_path = (
-        f"/content/drive/MyDrive/LogLLM/results/"
-        f"ft_model_{dataset_name}_qwen"
-    )
-
-
-# ============================================================
-# 7. OUTPUT FILE PATHS
-# ============================================================
+    ft_path = f"/content/drive/MyDrive/LogLLM/results/ft_model_{dataset_name}_qwen"
 
 embedding_path = (
     OUTPUT_DIR /

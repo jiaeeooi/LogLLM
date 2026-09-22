@@ -91,6 +91,7 @@ model_name = config["model_name"]
 pooling = config["pooling"]
 output_name = config["output_name"]
 
+# ft_path
 if encoder_name == "author":
     ft_path = os.path.join(ROOT_DIR, r"ft_model_{}".format(dataset_name))
 elif encoder_name == "reproduced":
@@ -102,21 +103,11 @@ elif encoder_name == "bge":
 elif encoder_name == "qwen":
     ft_path = f"/content/drive/MyDrive/LogLLM/results/ft_model_{dataset_name}_qwen"
 
-embedding_path = (
-    OUTPUT_DIR /
-    f"embeddings_{output_name}.npy"
-)
+# Output File Path
+embedding_path = (OUTPUT_DIR / f"embeddings_{output_name}.npy")
+metadata_path = (OUTPUT_DIR / f"embedding_metadata_{output_name}.csv")
 
-metadata_path = (
-    OUTPUT_DIR /
-    f"embedding_metadata_{output_name}.csv"
-)
-
-
-# ============================================================
-# 8. PRINT CONFIGURATION
-# ============================================================
-
+# Print
 print("=" * 70)
 print("Embedding Extraction Configuration")
 print("=" * 70)

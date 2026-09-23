@@ -1,5 +1,6 @@
 import os
 import re
+import ast
 from pathlib import Path
 import numpy as np
 import pandas as pd
@@ -278,7 +279,7 @@ metadata = []
 
 for window_id, row in tqdm(df.iterrows(), total=len(df), desc="Processing windows"):
     window_logs = str(row["Content"]).split(" ;-; ")
-    item_labels = str(row["item_Label"]).split(" ;-; ")
+    item_labels = ast.literal_eval(row["item_Label"])
     for log_id, log in enumerate(window_logs):
         log = replace_patterns(log)
         logs.append(log)

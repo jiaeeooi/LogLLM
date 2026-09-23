@@ -16,7 +16,7 @@ dataset_name = "BGL"
 #   "sbert"
 #   "bge"
 #   "qwen"
-encoder_name = "reproduced"
+encoder_name = "sbert"
 
 # -------------------------------------------
 

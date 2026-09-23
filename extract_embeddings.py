@@ -226,172 +226,64 @@ def load_encoder():
 tokenizer, encoder = load_encoder()
 print("\nEncoder loaded successfully.")
 
-
-# ============================================================
-# 13. EMBEDDING EXTRACTION
-# ============================================================
-
+# Extract Embeddings
 def extract_embeddings(logs, batch_size=32):
-
     all_embeddings = []
-    metadata = []
 
     encoder.eval()
 
-    for start_idx in tqdm(
-        range(0, len(logs), batch_size),
-        desc=f"Extracting {encoder_name} embeddings"
-    ):
-
+    for start_idx in tqdm(range(0, len(logs), batch_size),desc=f"Extracting {encoder_name} embeddings"):
         batch_logs = logs[start_idx:start_idx + batch_size]
-
-        # ----------------------------------------------------
-        # Tokenization
-        # ----------------------------------------------------
-        inputs = tokenizer(
-            batch_logs,
-            padding=True,
-            truncation=True,
-            return_tensors="pt",
-        )
-
-        # Move inputs to GPU
-        inputs = {
-            key: value.to(device)
-            for key, value in inputs.items()
-        }
-
-        # ----------------------------------------------------
-        # Forward pass
-        # ----------------------------------------------------
+        inputs = tokenizer(batch_logs, return_tensors="pt", max_length=100, padding=True, truncation=True) # tokenizer
+        inputs = {key: value.to(device) for key, value in inputs.items()} # Move to gpu
+        
+        # Forward Pass
         with torch.no_grad():
-
             encoder_outputs = encoder(**inputs)
-
-            # =================================================
-            # BERT CLS / pooler_output
-            # =================================================
             if pooling == "bert_cls":
-
                 embeddings = encoder_outputs.pooler_output
-
-
-            # =================================================
-            # SBERT / MPNet mean pooling
-            # =================================================
             elif pooling == "sbert_mean":
-
                 last_hidden = encoder_outputs.last_hidden_state
-
-                attention_mask = (
-                    inputs["attention_mask"]
-                    .unsqueeze(-1)
-                )
-
+                attention_mask = inputs["attention_mask"].unsqueeze(-1)
                 embeddings = (
                     (last_hidden * attention_mask).sum(dim=1)
-                    /
-                    attention_mask.sum(dim=1).clamp(min=1)
+                    / attention_mask.sum(dim=1).clamp(min=1)
                 )
-
-
-            # =================================================
-            # BGE-M3 CLS / first-token representation
-            # =================================================
             elif pooling == "bge_cls":
-
-                embeddings = (
-                    encoder_outputs
-                    .last_hidden_state[:, 0]
-                )
-
-
-            # =================================================
-            # Qwen3 last valid token
-            # =================================================
+                embeddings = encoder_outputs.last_hidden_state[:, 0]
             elif pooling == "qwen_last":
-
-                last_hidden = (
-                    encoder_outputs.last_hidden_state
-                )
-
-                sequence_lengths = (
-                    inputs["attention_mask"].sum(dim=1) - 1
-                )
-
+                last_hidden = encoder_outputs.last_hidden_state
+                sequence_lengths = inputs["attention_mask"].sum(dim=1) - 1
                 embeddings = last_hidden[
-                    torch.arange(
-                        last_hidden.size(0),
-                        device=last_hidden.device
-                    ),
+                    torch.arange(last_hidden.size(0), device=last_hidden.device), 
                     sequence_lengths
                 ]
-
-
             else:
-                raise ValueError(
-                    f"Unknown pooling method: {pooling}"
-                )
-
-            # ------------------------------------------------
-            # IMPORTANT:
-            # No normalization before saving.
-            # This keeps the encoder representation
-            # consistent with the LogLLM encoder pipeline.
-            # ------------------------------------------------
-            embeddings = (
-                embeddings
-                .float()
-                .cpu()
-                .numpy()
-            )
+                raise ValueError(f"Unknown pooling method: {pooling}")
+            embeddings = embeddings.float().cpu().numpy()
 
         all_embeddings.append(embeddings)
 
-
-    # --------------------------------------------------------
     # Combine all batches
-    # --------------------------------------------------------
-    all_embeddings = np.concatenate(
-        all_embeddings,
-        axis=0
-    )
+    all_embeddings = np.concatenate(all_embeddings, axis=0)
 
     return all_embeddings
 
 
-# ============================================================
-# 14. PREPARE LOGS + METADATA
-# ============================================================
-
+# Prepare Logs + Metadata
 print("\nPreparing logs...")
 
 logs = []
 metadata = []
 
-for window_id, row in tqdm(
-    df.iterrows(),
-    total=len(df),
-    desc="Processing windows"
-):
-
-    # --------------------------------------------------------
-    # Each window contains multiple logs separated by:
-    # " ;-; "
-    # --------------------------------------------------------
+for window_id, row in tqdm(df.iterrows(), total=len(df), desc="Processing windows"):
     window_logs = str(row["Content"]).split(" ;-; ")
-
     item_labels = str(row["item_Label"]).split(" ;-; ")
-
     for log_id, log in enumerate(window_logs):
-
         log = replace_patterns(log)
-
         logs.append(log)
 
-        # ----------------------------------------------------
         # Make sure label exists
-        # ----------------------------------------------------
         if log_id < len(item_labels):
             item_label = int(item_labels[log_id])
         else:
@@ -405,82 +297,41 @@ for window_id, row in tqdm(
             "content": log
         })
 
-
 print(f"\nTotal individual logs: {len(logs)}")
 
 
-# ============================================================
-# 15. EXTRACT EMBEDDINGS
-# ============================================================
+# Extract Embeddings
+embeddings = extract_embeddings(logs, batch_size=32)
 
-embeddings = extract_embeddings(
-    logs,
-    batch_size=32
-)
-
-
-# ============================================================
-# 16. VERIFY ALIGNMENT
-# ============================================================
-
+# Verify Alignment
 print("\nChecking embedding / metadata alignment...")
-
 assert len(embeddings) == len(metadata), (
     f"Mismatch: {len(embeddings)} embeddings vs "
     f"{len(metadata)} metadata rows"
 )
-
 print("Alignment check passed.")
-
 print(f"Embedding shape: {embeddings.shape}")
 
-
-# ============================================================
-# 17. SAVE EMBEDDINGS
-# ============================================================
-
+# Saving
 print("\nSaving embeddings...")
-
-np.save(
-    embedding_path,
-    embeddings
-)
-
-
-# ============================================================
-# 18. SAVE METADATA
-# ============================================================
+np.save(embedding_path,embeddings)
 
 print("Saving metadata...")
-
 metadata_df = pd.DataFrame(metadata)
+metadata_df.to_csv(metadata_path,index=False)
 
-metadata_df.to_csv(
-    metadata_path,
-    index=False
-)
-
-
-# ============================================================
-# 19. FINAL SUMMARY
-# ============================================================
-
+# Final Summary
 print("\n" + "=" * 70)
 print("EXTRACTION COMPLETE")
 print("=" * 70)
-
 print(f"Dataset          : {dataset_name}")
 print(f"Encoder          : {encoder_name}")
 print(f"Pooling          : {pooling}")
 print(f"Number of logs   : {len(embeddings)}")
 print(f"Embedding dim    : {embeddings.shape[1]}")
-
 print("\nFiles saved:")
-
 print(f"Embeddings:")
 print(f"  {embedding_path}")
-
 print(f"\nMetadata:")
 print(f"  {metadata_path}")
-
 print("=" * 70)

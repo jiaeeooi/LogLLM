@@ -124,3 +124,36 @@ plt.legend()
 plt.tight_layout()
 
 plt.show()
+
+
+# Plot 2: LogLLM window-level predictions
+predicted = metadata["predicted_window_label"].to_numpy()
+
+plt.figure(figsize=(10, 8))
+
+pred_normal = predicted == 0
+pred_anomaly = predicted == 1
+
+plt.scatter(
+    embedding_2d[pred_normal, 0],
+    embedding_2d[pred_normal, 1],
+    s=4,
+    alpha=0.3,
+    label="Predicted Normal Window"
+)
+
+plt.scatter(
+    embedding_2d[pred_anomaly, 0],
+    embedding_2d[pred_anomaly, 1],
+    s=12,
+    alpha=0.8,
+    label="Predicted Anomalous Window"
+)
+
+plt.xlabel("UMAP 1")
+plt.ylabel("UMAP 2")
+plt.title("UMAP of BERT Encoder Embeddings — LogLLM Predictions")
+plt.legend()
+plt.tight_layout()
+
+plt.show()

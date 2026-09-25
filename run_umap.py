@@ -3,12 +3,12 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import umap
 
-UMAP_OUTPUT = "/content/drive/MyDrive/LogLLM/results/embeddings_BGL/umap_author.csv"
+#UMAP_OUTPUT = "/content/drive/MyDrive/LogLLM/results/embeddings_BGL/umap_author.csv"
 
 # Paths
 EMBEDDINGS_PATH = "/content/drive/MyDrive/LogLLM/results/embeddings_BGL/embeddings_author.npy"
 METADATA_PATH = "/content/drive/MyDrive/LogLLM/results/embeddings_BGL/embedding_metadata_author.csv"
-PREDICTIONS_PATH = "/content/drive/MyDrive/LogLLM/BGL/test_preds_original.csv"
+#PREDICTIONS_PATH = "/content/drive/MyDrive/LogLLM/BGL/test_preds_original.csv"
 
 # Load
 print("Loading embeddings...")
@@ -17,12 +17,12 @@ embeddings = np.load(EMBEDDINGS_PATH)
 print("Loading metadata...")
 metadata = pd.read_csv(METADATA_PATH)
 
-print("Loading predictions...")
-predictions = pd.read_csv(PREDICTIONS_PATH)
+#print("Loading predictions...")
+#predictions = pd.read_csv(PREDICTIONS_PATH)
 
 print("\nEmbeddings shape:", embeddings.shape)
 print("Metadata shape:", metadata.shape)
-print("Predictions shape:", predictions.shape)
+#print("Predictions shape:", predictions.shape)
 
 # Check Alignment
 assert len(embeddings) == len(metadata), \
@@ -36,9 +36,34 @@ print(metadata["item_label"].value_counts())
 print("\nWindow label distribution:")
 print(metadata["window_label"].value_counts())
 
-print("\nPredicted window label distribution:")
-print(predictions["Predicted_Label"].value_counts())
+#print("\nPredicted window label distribution:")
+#print(predictions["Predicted_Label"].value_counts())
 
+# Stratified sampling for UMAP visualization
+print("\nSampling embeddings for UMAP...")
+
+rng = np.random.default_rng(42)
+
+normal_idx = np.where(metadata["item_label"].to_numpy() == 0)[0]
+anomaly_idx = np.where(metadata["item_label"].to_numpy() == 1)[0]
+
+n_normal = min(25000, len(normal_idx))
+n_anomaly = min(25000, len(anomaly_idx))
+
+sample_normal = rng.choice(normal_idx, n_normal, replace=False)
+sample_anomaly = rng.choice(anomaly_idx, n_anomaly, replace=False)
+
+sample_idx = np.concatenate([sample_normal, sample_anomaly])
+
+# Keep embeddings and metadata aligned
+embeddings = embeddings[sample_idx]
+metadata = metadata.iloc[sample_idx].reset_index(drop=True)
+
+print(f"Sampled {len(embeddings)} embeddings.")
+print("Sampled label distribution:")
+print(metadata["item_label"].value_counts())
+
+'''
 # Map window-level predictions to individual logs
 prediction_map = predictions["Predicted_Label"].to_numpy()
 
@@ -48,6 +73,7 @@ assert metadata["window_id"].max() < len(prediction_map), \
 metadata["predicted_window_label"] = metadata["window_id"].map(
     lambda x: prediction_map[int(x)]
 )
+'''
 
 # UMAP
 print("\nRunning UMAP...")
@@ -64,6 +90,7 @@ embedding_2d = reducer.fit_transform(embeddings)
 
 print("UMAP complete.")
 
+'''
 # Save UMAP Coordinates
 umap_results = metadata.copy()
 
@@ -74,7 +101,7 @@ umap_results.to_csv(UMAP_OUTPUT, index=False)
 
 print("\nSaved UMAP coordinates to:")
 print(UMAP_OUTPUT)
-
+'''
 
 # Plot 1: True individual-log labels
 plt.figure(figsize=(10, 8))

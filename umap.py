@@ -39,13 +39,7 @@ print(metadata["window_label"].value_counts())
 print("\nPredicted window label distribution:")
 print(predictions["Predicted_Label"].value_counts())
 
-# ============================================================
 # Map window-level predictions to individual logs
-# ============================================================
-
-# Each metadata row corresponds to one individual log.
-# window_id identifies which original window that log belongs to.
-
 prediction_map = predictions["Predicted_Label"].to_numpy()
 
 assert metadata["window_id"].max() < len(prediction_map), \
@@ -55,19 +49,6 @@ metadata["predicted_window_label"] = metadata["window_id"].map(
     lambda x: prediction_map[int(x)]
 )
 
-
-# Optional: PCA before UMAP
-# Reducing 768 dimensions to 50 before UMAP makes UMAP faster and removes some noise.
-
-from sklearn.decomposition import PCA
-
-print("\nRunning PCA...")
-
-pca = PCA(n_components=50, random_state=42)
-embeddings_pca = pca.fit_transform(embeddings)
-
-print("Variance explained by 50 PCA components:", pca.explained_variance_ratio_.sum())
-
 # UMAP
 print("\nRunning UMAP...")
 
@@ -75,11 +56,11 @@ reducer = umap.UMAP(
     n_neighbors=15,
     min_dist=0.1,
     n_components=2,
-    metric="euclidean",
+    metric="cosine",
     random_state=42
 )
 
-embedding_2d = reducer.fit_transform(embeddings_pca)
+embedding_2d = reducer.fit_transform(embeddings)
 
 print("UMAP complete.")
 
@@ -125,7 +106,7 @@ plt.tight_layout()
 
 plt.show()
 
-
+'''
 # Plot 2: LogLLM window-level predictions
 predicted = metadata["predicted_window_label"].to_numpy()
 
@@ -157,3 +138,4 @@ plt.legend()
 plt.tight_layout()
 
 plt.show()
+'''

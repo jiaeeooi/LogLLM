@@ -4,11 +4,11 @@ import matplotlib.pyplot as plt
 import umap
 
 #UMAP_OUTPUT = "/content/drive/MyDrive/LogLLM/results/embeddings_BGL/umap_author.csv"
-PLOT_OUTPUT = "/content/drive/MyDrive/LogLLM/results/embeddings_BGL/umap_sbert.png"
+PLOT_OUTPUT = "/content/drive/MyDrive/LogLLM/results/embeddings_BGL/umap_bge.png"
 
 # Paths
-EMBEDDINGS_PATH = "/content/drive/MyDrive/LogLLM/results/embeddings_BGL/embeddings_sbert.npy"
-METADATA_PATH = "/content/drive/MyDrive/LogLLM/results/embeddings_BGL/embedding_metadata_sbert.csv"
+EMBEDDINGS_PATH = "/content/drive/MyDrive/LogLLM/results/embeddings_BGL/embeddings_bge.npy"
+METADATA_PATH = "/content/drive/MyDrive/LogLLM/results/embeddings_BGL/embedding_metadata_bge.csv"
 #PREDICTIONS_PATH = "/content/drive/MyDrive/LogLLM/BGL/test_preds_original.csv"
 
 # Load

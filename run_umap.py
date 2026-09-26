@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 import umap
 
 #UMAP_OUTPUT = "/content/drive/MyDrive/LogLLM/results/embeddings_BGL/umap_author.csv"
+PLOT_OUTPUT = "/content/drive/MyDrive/LogLLM/results/embeddings_BGL/umap_author.png"
 
 # Paths
 EMBEDDINGS_PATH = "/content/drive/MyDrive/LogLLM/results/embeddings_BGL/embeddings_author.npy"
@@ -131,7 +132,13 @@ plt.title("UMAP of BERT Encoder Embeddings — BGL")
 plt.legend()
 plt.tight_layout()
 
-plt.show()
+# Save figure
+plt.savefig(PLOT_OUTPUT, dpi=300, bbox_inches="tight")
+
+print("\nSaved UMAP plot to:")
+print(PLOT_OUTPUT)
+
+plt.close()
 
 '''
 # Plot 2: LogLLM window-level predictions

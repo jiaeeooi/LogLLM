@@ -4,11 +4,11 @@ import matplotlib.pyplot as plt
 import umap
 
 #UMAP_OUTPUT = "/content/drive/MyDrive/LogLLM/results/embeddings_BGL/umap_author.csv"
-PLOT_OUTPUT = "/content/drive/MyDrive/LogLLM/results/embeddings_BGL/umap_reproduced.png"
+PLOT_OUTPUT = "/content/drive/MyDrive/LogLLM/results/embeddings_BGL/umap_sbert.png"
 
 # Paths
-EMBEDDINGS_PATH = "/content/drive/MyDrive/LogLLM/results/embeddings_BGL/embeddings_reproduced.npy"
-METADATA_PATH = "/content/drive/MyDrive/LogLLM/results/embeddings_BGL/embedding_metadata_reproduced.csv"
+EMBEDDINGS_PATH = "/content/drive/MyDrive/LogLLM/results/embeddings_BGL/embeddings_sbert.npy"
+METADATA_PATH = "/content/drive/MyDrive/LogLLM/results/embeddings_BGL/embedding_metadata_sbert.csv"
 #PREDICTIONS_PATH = "/content/drive/MyDrive/LogLLM/BGL/test_preds_original.csv"
 
 # Load
@@ -128,7 +128,7 @@ plt.scatter(
 
 plt.xlabel("UMAP 1")
 plt.ylabel("UMAP 2")
-plt.title("UMAP of BERT Encoder Embeddings — BGL")
+plt.title("UMAP of Encoder Embeddings — BGL")
 plt.legend()
 plt.tight_layout()
 

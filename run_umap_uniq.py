@@ -3,9 +3,9 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import umap
 
-PLOT_OUTPUT = "/content/drive/MyDrive/LogLLM/results/embeddings_BGL/umap_uniq_author.png"
-EMBEDDINGS_PATH = "/content/drive/MyDrive/LogLLM/results/embeddings_BGL/embeddings_author.npy"
-METADATA_PATH = "/content/drive/MyDrive/LogLLM/results/embeddings_BGL/embedding_metadata_author.csv"
+PLOT_OUTPUT = "/content/drive/MyDrive/LogLLM/results/embeddings_BGL/umap_uniq_bge.png"
+EMBEDDINGS_PATH = "/content/drive/MyDrive/LogLLM/results/embeddings_BGL/embeddings_bge.npy"
+METADATA_PATH = "/content/drive/MyDrive/LogLLM/results/embeddings_BGL/embedding_metadata_bge.csv"
 
 # Load
 print("Loading embeddings...")

@@ -17,7 +17,6 @@ metadata = pd.read_csv(METADATA_PATH)
 print("\nEmbeddings shape:", embeddings.shape)
 print("Metadata shape:", metadata.shape)
 
-
 # Check alignment
 assert len(embeddings) == len(metadata), \
     "Number of embeddings does not match metadata rows."
@@ -27,7 +26,6 @@ print("\nEmbedding and metadata lengths match.")
 # Check original label distributionn
 print("\nOriginal item label distribution:")
 print(metadata["item_label"].value_counts())
-
 
 # Find unique templates
 print("\nFinding unique templates...")

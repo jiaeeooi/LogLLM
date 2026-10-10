@@ -16,16 +16,18 @@ from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_sc
 max_content_len = 100
 max_seq_len = 128
 batch_size = 32
-dataset_name = 'HDFS'   # 'Thunderbird' 'HDFS_v1'  'BGL'  'Liberty'
+dataset_name = 'Liberty'   # 'Thunderbird' 'HDFS_v1'  'BGL'  'Liberty'
 #data_path = "/content/drive/MyDrive/LogLLM/BGL/bgl_test.csv"
 #data_path = "/content/drive/MyDrive/LogLLM/Thunderbird/test.csv"
-data_path = "/content/drive/MyDrive/LogLLM/HDFS/test.csv"
+#data_path = "/content/drive/MyDrive/LogLLM/HDFS/test.csv"
+data_path = "/content/drive/MyDrive/LogLLM/Liberty/test.csv"
 #output_path = "/content/drive/MyDrive/LogLLM/BGL/test_preds_original.csv"
 #output_path = "/content/drive/MyDrive/LogLLM/BGL/test_preds_reproduced.csv"
 #output_path = "/content/drive/MyDrive/LogLLM/BGL/test_preds_mpnet.csv"
 #output_path = "/content/drive/MyDrive/LogLLM/BGL/test_preds_bgem3.csv"
 #output_path = "/content/drive/MyDrive/LogLLM/BGL/test_preds_qwen.csv"
-output_path = "/content/drive/MyDrive/LogLLM/HDFS/test_preds_original.csv"
+#output_path = "/content/drive/MyDrive/LogLLM/HDFS/test_preds_original.csv"
+output_path = "/content/drive/MyDrive/LogLLM/Liberty/test_preds_original.csv"
 
 Bert_path = "bert-base-uncased"
 #Bert_path = "sentence-transformers/all-mpnet-base-v2"

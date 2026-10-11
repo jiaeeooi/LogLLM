@@ -4,10 +4,10 @@ import numpy as np
 import torch
 from tqdm import tqdm
 from torch import nn
-#from model import LogLLM
+from model import LogLLM
 #from sentencebert_model import LogLLM
 #from bge_model import LogLLM
-from qwen_model import LogLLM
+#from qwen_model import LogLLM
 from torch.utils.data import DataLoader
 from customDataset import CustomDataset, CustomCollator, BalancedSampler
 from torch import optim
@@ -17,7 +17,7 @@ n_epochs_1 = 1
 n_epochs_2_1 = 1
 n_epochs_2_2 = 1
 n_epochs_3 = 2
-dataset_name = 'BGL'  # 'Thunderbird' 'HDFS_v1' 'BGL'   'Liberty'
+dataset_name = 'Liberty'  # 'Thunderbird' 'HDFS_v1' 'BGL'   'Liberty'
 batch_size = 16
 micro_batch_size = 4
 gradient_accumulation_steps = batch_size // micro_batch_size
@@ -30,15 +30,16 @@ lr_3 = 5e-5
 max_content_len = 100
 max_seq_len = 128
 
-data_path = "/content/drive/MyDrive/LogLLM/BGL/bgl_train.csv"
+#data_path = "/content/drive/MyDrive/LogLLM/BGL/bgl_train.csv"
 #data_path = "/content/drive/MyDrive/LogLLM/Thunderbird/train.csv"
+data_path = "/content/drive/MyDrive/LogLLM/Liberty/train.csv"
 
 min_less_portion = 0.3
 
-#Bert_path = "bert-base-uncased"
+Bert_path = "bert-base-uncased"
 #Bert_path = "sentence-transformers/all-mpnet-base-v2"
 #Bert_path = "BAAI/bge-m3"
-Bert_path = "Qwen/Qwen3-Embedding-0.6B"
+#Bert_path = "Qwen/Qwen3-Embedding-0.6B"
 Llama_path = "meta-llama/Meta-Llama-3-8B"
 
 ROOT_DIR = Path(__file__).parent
@@ -47,7 +48,8 @@ ROOT_DIR = Path(__file__).parent
 #ft_path = f"/content/drive/MyDrive/LogLLM/results/ft_model_{dataset_name}_meanpool"
 #ft_path = f"/content/drive/MyDrive/LogLLM/results/ft_model_{dataset_name}_mpnet"
 #ft_path = f"/content/drive/MyDrive/LogLLM/results/ft_model_{dataset_name}_bgem3"
-ft_path = f"/content/drive/MyDrive/LogLLM/results/ft_model_{dataset_name}_qwen"
+#ft_path = f"/content/drive/MyDrive/LogLLM/results/ft_model_{dataset_name}_qwen"
+ft_path = f"/content/drive/MyDrive/LogLLM/results/ft_model_{dataset_name}"
 
 device = torch.device("cuda:0")
 

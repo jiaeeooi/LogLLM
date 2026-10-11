@@ -27,7 +27,8 @@ data_path = "/content/drive/MyDrive/LogLLM/Liberty/test.csv"
 #output_path = "/content/drive/MyDrive/LogLLM/BGL/test_preds_bgem3.csv"
 #output_path = "/content/drive/MyDrive/LogLLM/BGL/test_preds_qwen.csv"
 #output_path = "/content/drive/MyDrive/LogLLM/HDFS/test_preds_original.csv"
-output_path = "/content/drive/MyDrive/LogLLM/Liberty/test_preds_original.csv"
+#output_path = "/content/drive/MyDrive/LogLLM/Liberty/test_preds_original.csv"
+output_path = "/content/drive/MyDrive/LogLLM/Liberty/test_preds_reproduced.csv"
 
 Bert_path = "bert-base-uncased"
 #Bert_path = "sentence-transformers/all-mpnet-base-v2"
@@ -36,8 +37,8 @@ Bert_path = "bert-base-uncased"
 Llama_path = "meta-llama/Meta-Llama-3-8B"
 
 ROOT_DIR = Path(__file__).parent
-ft_path = os.path.join(ROOT_DIR, r"ft_model_{}".format(dataset_name))
-#ft_path = f"/content/drive/MyDrive/LogLLM/results/ft_model_{dataset_name}"
+#ft_path = os.path.join(ROOT_DIR, r"ft_model_{}".format(dataset_name))
+ft_path = f"/content/drive/MyDrive/LogLLM/results/ft_model_{dataset_name}"
 #ft_path = f"/content/drive/MyDrive/LogLLM/results/ft_model_{dataset_name}_meanpool"
 #ft_path = f"/content/drive/MyDrive/LogLLM/results/ft_model_{dataset_name}_mpnet"
 #ft_path = f"/content/drive/MyDrive/LogLLM/results/ft_model_{dataset_name}_bgem3"

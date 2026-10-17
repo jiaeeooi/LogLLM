@@ -17,10 +17,9 @@ from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_sc
 max_content_len = 100
 max_seq_len = 128
 batch_size = 32
-dataset_name = 'BGL'   # 'Thunderbird' 'HDFS_v1'  'BGL'  'Liberty'
-data_path = "/content/drive/MyDrive/LogLLM/BGL/bgl_test.csv"
-#data_path = "/content/drive/MyDrive/LogLLM/Liberty/test.csv"
-#data_path = "/content/drive/MyDrive/LogLLM/HDFS/test.csv"
+dataset_name = 'Liberty'   # 'Thunderbird' 'HDFS_v1'  'BGL'  'Liberty'
+#data_path = "/content/drive/MyDrive/LogLLM/BGL/bgl_test.csv"
+data_path = "/content/drive/MyDrive/LogLLM/Liberty/test.csv"
 
 #output_path = f"/content/drive/MyDrive/LogLLM/{dataset_name}/test_preds_original.csv"
 #output_path = f"/content/drive/MyDrive/LogLLM/{dataset_name}/test_preds_reproduced.csv"

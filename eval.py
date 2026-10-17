@@ -7,9 +7,10 @@ import torch
 from torch.utils.data import DataLoader
 from tqdm import tqdm
 #from model import LogLLM
+from bert_model import LogLLM
 #from sentencebert_model import LogLLM
 #from bge_model import LogLLM
-from qwen_model import LogLLM
+#from qwen_model import LogLLM
 from customDataset import CustomDataset, CustomCollator
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
 
@@ -18,14 +19,15 @@ max_seq_len = 128
 batch_size = 32
 dataset_name = 'BGL'   # 'Thunderbird' 'HDFS_v1'  'BGL'  'Liberty'
 data_path = "/content/drive/MyDrive/LogLLM/BGL/bgl_test.csv"
-#data_path = "/content/drive/MyDrive/LogLLM/Thunderbird/test.csv"
-#data_path = "/content/drive/MyDrive/LogLLM/HDFS/test.csv"
 #data_path = "/content/drive/MyDrive/LogLLM/Liberty/test.csv"
+#data_path = "/content/drive/MyDrive/LogLLM/HDFS/test.csv"
+
 #output_path = "/content/drive/MyDrive/LogLLM/BGL/test_preds_original.csv"
 #output_path = "/content/drive/MyDrive/LogLLM/BGL/test_preds_reproduced.csv"
+output_path = "/content/drive/MyDrive/LogLLM/BGL/test_preds_bert.csv"
 #output_path = "/content/drive/MyDrive/LogLLM/BGL/test_preds_mpnet.csv"
 #output_path = "/content/drive/MyDrive/LogLLM/BGL/test_preds_bgem3.csv"
-output_path = "/content/drive/MyDrive/LogLLM/BGL/test_preds_qwen.csv"
+#output_path = "/content/drive/MyDrive/LogLLM/BGL/test_preds_qwen.csv"
 #output_path = "/content/drive/MyDrive/LogLLM/HDFS/test_preds_original.csv"
 #output_path = "/content/drive/MyDrive/LogLLM/Liberty/test_preds_original.csv"
 #output_path = "/content/drive/MyDrive/LogLLM/Liberty/test_preds_reproduced.csv"
@@ -33,18 +35,19 @@ output_path = "/content/drive/MyDrive/LogLLM/BGL/test_preds_qwen.csv"
 #output_path = "/content/drive/MyDrive/LogLLM/Liberty/test_preds_bgem3.csv"
 #output_path = "/content/drive/MyDrive/LogLLM/Liberty/test_preds_qwen.csv"
 
-#Bert_path = "bert-base-uncased"
+Bert_path = "bert-base-uncased"
 #Bert_path = "sentence-transformers/all-mpnet-base-v2"
 #Bert_path = "BAAI/bge-m3"
-Bert_path = "Qwen/Qwen3-Embedding-0.6B"
+#Bert_path = "Qwen/Qwen3-Embedding-0.6B"
 Llama_path = "meta-llama/Meta-Llama-3-8B"
 
 ROOT_DIR = Path(__file__).parent
 #ft_path = os.path.join(ROOT_DIR, r"ft_model_{}".format(dataset_name))
 #ft_path = f"/content/drive/MyDrive/LogLLM/results/ft_model_{dataset_name}"
+ft_path = f"/content/drive/MyDrive/LogLLM/results/ft_model_{dataset_name}_bert"
 #ft_path = f"/content/drive/MyDrive/LogLLM/results/ft_model_{dataset_name}_mpnet"
 #ft_path = f"/content/drive/MyDrive/LogLLM/results/ft_model_{dataset_name}_bgem3"
-ft_path = f"/content/drive/MyDrive/LogLLM/results/ft_model_{dataset_name}_qwen"
+#ft_path = f"/content/drive/MyDrive/LogLLM/results/ft_model_{dataset_name}_qwen"
 
 device = torch.device("cuda:0")
 

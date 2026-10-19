@@ -162,7 +162,7 @@ if __name__ == '__main__':
     #evalModel(model, dataloader)
     preds = evalModel(model, dataloader) #
 
-    # NEW: Save predections to a new CSV
+    # NEW: Save predections to a new/existing CSV
     test_df = pd.read_csv(data_path)
 
     test_df['Preprocessed_Content'] = test_df['Content'].apply(
@@ -174,7 +174,16 @@ if __name__ == '__main__':
 
     assert len(preds) == len(test_df)
 
-    test_df['Predicted_Label'] = preds 
+    if os.path.exists(output_path):
+        result_df = pd.read_csv(output_path)
+        assert len(preds) == len(test_df)
+        column_name = f'Predicted_Label_{seed}'
+    else:
+        result_df = test_df.copy()
+        column_name = 'Predicted_Label'
 
-    test_df.to_csv(output_path, index=False) 
+    result_df[column_name] = preds
+
+    result_df.to_csv(output_path, index=False)
     print(f'Predictions saved to: {output_path}')
+    print(f'Prediction column: {column_name}')

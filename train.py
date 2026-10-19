@@ -12,7 +12,15 @@ from bert_model import LogLLM
 from torch.utils.data import DataLoader
 from customDataset import CustomDataset, CustomCollator, BalancedSampler
 from torch import optim
+import random
 
+def set_seed(seed):
+    random.seed(seed)
+    np.random.seed(seed)
+    torch.manual_seed(seed)
+
+    if torch.cuda.is_available():
+        torch.cuda.manual_seed_all(seed)
 
 n_epochs_1 = 1
 n_epochs_2_1 = 1
@@ -23,7 +31,6 @@ batch_size = 16
 micro_batch_size = 4
 gradient_accumulation_steps = batch_size // micro_batch_size
 
-
 lr_1 = 5e-4
 lr_2_1 = 5e-4
 lr_2_2 = 5e-5
@@ -33,6 +40,7 @@ max_seq_len = 128
 
 #data_path = "/content/drive/MyDrive/LogLLM/BGL/bgl_train.csv"
 data_path = "/content/drive/MyDrive/LogLLM/Liberty/train.csv"
+seed = 42
 
 min_less_portion = 0.3
 
@@ -49,7 +57,6 @@ ft_path = f"/content/drive/MyDrive/LogLLM/results/ft_model_{dataset_name}_bert"
 #ft_path = f"/content/drive/MyDrive/LogLLM/results/ft_model_{dataset_name}_mpnet"
 #ft_path = f"/content/drive/MyDrive/LogLLM/results/ft_model_{dataset_name}_bgem3"
 #ft_path = f"/content/drive/MyDrive/LogLLM/results/ft_model_{dataset_name}_qwen"
-
 
 device = torch.device("cuda:0")
 
@@ -80,8 +87,6 @@ def print_number_of_trainable_model_parameters(model):
             trainable_model_params += param.numel()
     print(f"all params num: {all_model_params}, trainable param num: {trainable_model_params}")
     return params
-
-
 
 def trainModel(model, dataloader, gradient_accumulation_steps, n_epochs, lr):
     criterion = nn.CrossEntropyLoss(reduction='mean')
@@ -160,6 +165,9 @@ def trainModel(model, dataloader, gradient_accumulation_steps, n_epochs, lr):
                   f"[acc: {train_acc_epoch:3f}]")
 
 if __name__ == '__main__':
+    set_seed(seed)
+    print(f"Random seed: {seed}")
+    
     print(f'dataset: {data_path}')
     dataset = CustomDataset(data_path, drop_duplicates=False)
 

@@ -13,6 +13,15 @@ from bert_model import LogLLM
 #from qwen_model import LogLLM
 from customDataset import CustomDataset, CustomCollator
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
+import random
+
+def set_seed(seed):
+    random.seed(seed)
+    np.random.seed(seed)
+    torch.manual_seed(seed)
+
+    if torch.cuda.is_available():
+        torch.cuda.manual_seed_all(seed)
 
 max_content_len = 100
 max_seq_len = 128
@@ -20,6 +29,7 @@ batch_size = 32
 dataset_name = 'Liberty'   # 'Thunderbird' 'HDFS_v1'  'BGL'  'Liberty'
 #data_path = "/content/drive/MyDrive/LogLLM/BGL/bgl_test.csv"
 data_path = "/content/drive/MyDrive/LogLLM/Liberty/test.csv"
+seed = 42
 
 #output_path = f"/content/drive/MyDrive/LogLLM/{dataset_name}/test_preds_original.csv"
 #output_path = f"/content/drive/MyDrive/LogLLM/{dataset_name}/test_preds_reproduced.csv"
@@ -130,6 +140,9 @@ def evalModel(model, dataloader):
     return preds #
 
 if __name__ == '__main__':
+    set_seed(seed)
+    print(f"Random seed: {seed}")
+
     print(f'dataset: {data_path}')
     dataset = CustomDataset(data_path)
     model = LogLLM(Bert_path, Llama_path, ft_path=ft_path, is_train_mode=False, device=device,

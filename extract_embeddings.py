@@ -13,6 +13,7 @@ dataset_name = "BGL"
 # Options:
 #   "author"
 #   "reproduced"
+#   "bert"
 #   "sbert"
 #   "bge"
 #   "qwen"
@@ -24,7 +25,7 @@ ROOT_DIR = Path(__file__).parent
 # Three dataset paths
 DATA_PATHS = {
     "BGL": "/content/drive/MyDrive/LogLLM/BGL/bgl_test.csv",
-    "Thunderbird": "/content/drive/MyDrive/LogLLM/Thunderbird/test.csv",
+    "Liberty": "/content/drive/MyDrive/LogLLM/Liberty/test.csv",
 }
 
 # Output directory
@@ -44,6 +45,7 @@ data_path = DATA_PATHS[dataset_name]
 VALID_ENCODERS = [
     "author",
     "reproduced",
+    "bert",
     "sbert",
     "bge",
     "qwen",
@@ -65,6 +67,12 @@ ENCODER_CONFIG = {
         "model_name": "bert-base-uncased",
         "pooling": "bert_cls",
         "output_name": "reproduced",
+    },
+
+    "bert": {
+        "model_name": "bert-base-uncased",
+        "pooling": "bert_cls",
+        "output_name": "bert",
     },
 
     "sbert": {
@@ -97,6 +105,8 @@ if encoder_name == "author":
     ft_path = os.path.join(ROOT_DIR, r"ft_model_{}".format(dataset_name))
 elif encoder_name == "reproduced":
     ft_path = f"/content/drive/MyDrive/LogLLM/results/ft_model_{dataset_name}"
+elif encoder_name == "bert":
+    ft_path = f"/content/drive/MyDrive/LogLLM/results/ft_model_{dataset_name}_bert"
 elif encoder_name == "sbert":
     ft_path = f"/content/drive/MyDrive/LogLLM/results/ft_model_{dataset_name}_mpnet"
 elif encoder_name == "bge":
@@ -182,6 +192,13 @@ def load_encoder():
             torch_dtype=torch.float16
         )
 
+        bert.eval()
+        return tokenizer, bert
+
+    elif encoder_name == "bert":
+        tokenizer = BertTokenizerFast.from_pretrained("bert-base-uncased")
+        bert = BertModel.from_pretrained("bert-base-uncased", quantization_config=bnb_config, low_cpu_mem_usage=True, device_map="cuda:0" if torch.cuda.is_available() else None)
+        
         bert.eval()
         return tokenizer, bert
 

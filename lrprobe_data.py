@@ -85,43 +85,31 @@ def extract_individual_logs(csv_path, split_name):
 train_logs = extract_individual_logs(TRAIN_PATH, "TRAIN")
 test_logs = extract_individual_logs(TEST_PATH, "TEST")
 
-
-# Check for conflicting labels across identical templates
-all_logs = pd.concat([train_logs, test_logs], ignore_index=True)
+all_logs = pd.concat([train_logs.assign(split="train"),test_logs.assign(split="test")], ignore_index=True)
 
 label_counts = all_logs.groupby("content")["item_label"].nunique()
-conflicting_templates = label_counts[label_counts > 1]
+conflicting_templates = set(label_counts[label_counts > 1].index)
 
-print("\nTemplate label consistency:")
-print(f"  Unique normalized templates: {all_logs['content'].nunique():,}")
-print(f"  Templates with conflicting labels: {len(conflicting_templates):,}")
+print(f"Conflicting templates: {len(conflicting_templates)}")
 
-if len(conflicting_templates) > 0:
-    print("\nExamples of conflicting templates:")
+for template in sorted(conflicting_templates):
+    subset = all_logs[all_logs["content"] == template]
+    print(f"\nTemplate: {template}")
+    print(subset["item_label"].value_counts().sort_index())
 
-    conflict_examples = all_logs[all_logs["content"].isin(conflicting_templates.index)]
-
-    print(conflict_examples.head(20).to_string(index=False))
-
-    raise ValueError(
-        "Identical normalized templates have conflicting item labels. "
-        "Investigate these cases before creating the probe datasets."
-    )
-
-
-# Deduplicate within each split
 train_before = len(train_logs)
 test_before = len(test_logs)
 
+train_logs = train_logs[~train_logs["content"].isin(conflicting_templates)].copy()
+test_logs = test_logs[~test_logs["content"].isin(conflicting_templates)].copy()
+
+print("\nAfter excluding conflicting templates:")
+print(f"Train: {train_before:,} -> {len(train_logs):,}")
+print(f"Test:  {test_before:,} -> {len(test_logs):,}")
+
 train_probe = train_logs.drop_duplicates(subset=["content"], keep="first").copy()
-test_probe = test_logs.drop_duplicates(subset=["content"], keep="first").copy()
+test_probe = test_logs.drop_duplicates(subset=["content"],keep="first").copy()
 
-print("\nWithin-split deduplication:")
-print(f"  Train: {train_before:,} -> {len(train_probe):,}")
-print(f"  Test:  {test_before:,} -> {len(test_probe):,}")
-
-
-# Remove test templates appearing in training
 train_templates = set(train_probe["content"])
 
 overlap_mask = test_probe["content"].isin(train_templates)
@@ -129,38 +117,23 @@ overlap_count = int(overlap_mask.sum())
 
 test_probe = test_probe.loc[~overlap_mask].copy()
 
-print("\nCross-split deduplication:")
-print(f"  Overlapping test templates removed: {overlap_count:,}")
-print(f"  Final test templates: {len(test_probe):,}")
+print(f"\nTest templates removed due to train overlap: {overlap_count:,}")
 
+train_probe = train_probe[["content", "item_label"]].reset_index(drop=True)
+test_probe = test_probe[["content", "item_label"]].reset_index(drop=True)
 
-# Validate final datasets
 assert train_probe["content"].is_unique
 assert test_probe["content"].is_unique
 assert set(train_probe["content"]).isdisjoint(set(test_probe["content"]))
 
-# Ensure that only the two requested columns remain.
-train_probe = train_probe[["content", "item_label"]].reset_index(drop=True)
-test_probe = test_probe[["content", "item_label"]].reset_index(drop=True)
-
-print("\nFinal item_label distributions:")
-print("\nTrain:")
+print("\nFinal train label distribution:")
 print(train_probe["item_label"].value_counts().sort_index())
 
-print("\nTest:")
+print("\nFinal test label distribution:")
 print(test_probe["item_label"].value_counts().sort_index())
-
-
-# Save probe datasets
-Path(OUTPUT_TRAIN_PATH).parent.mkdir(parents=True, exist_ok=True)
-Path(OUTPUT_TEST_PATH).parent.mkdir(parents=True, exist_ok=True)
 
 train_probe.to_csv(OUTPUT_TRAIN_PATH, index=False)
 test_probe.to_csv(OUTPUT_TEST_PATH, index=False)
 
-print("\nSaved probe datasets:")
-print(f"  Train: {OUTPUT_TRAIN_PATH}")
-print(f"  Test:  {OUTPUT_TEST_PATH}")
-
-print("\nFinal columns:", train_probe.columns.tolist())
-print("All checks passed.")
+print(f"\nSaved: {OUTPUT_TRAIN_PATH}")
+print(f"Saved: {OUTPUT_TEST_PATH}")

@@ -22,7 +22,6 @@ encoder_name = "qwen"
 # -------------------------------------------
 
 ROOT_DIR = Path(__file__).parent
-# Three dataset paths
 DATA_PATHS = {
     "BGL": "/content/drive/MyDrive/LogLLM/BGL/bgl_test.csv",
     "Liberty": "/content/drive/MyDrive/LogLLM/Liberty/test.csv",

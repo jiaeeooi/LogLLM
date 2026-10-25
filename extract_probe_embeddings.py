@@ -28,10 +28,6 @@ RESULTS_DIR = Path("/content/drive/MyDrive/LogLLM/results/lr_probe")
 OUTPUT_DIR = RESULTS_DIR / encoder_name
 OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
-# Same extraction settings as the original script
-BATCH_SIZE = 32
-MAX_LENGTH = 100
-
 ENCODER_CONFIG = {
     "author": {
         "model_name": "bert-base-uncased",
@@ -104,229 +100,112 @@ bnb_config = BitsAndBytesConfig(
     bnb_4bit_compute_dtype=torch.bfloat16,
 )
 
-# ============================================================
-# 5. Load encoder
-#    Preserves original checkpoint and pooling setup
-# ============================================================
-
 def load_encoder():
-
     if encoder_name in ["author", "reproduced"]:
+        tokenizer = BertTokenizerFast.from_pretrained("bert-base-uncased")
+        bert = BertModel.from_pretrained("bert-base-uncased", quantization_config=bnb_config, low_cpu_mem_usage=True, device_map="cuda:0" if torch.cuda.is_available() else None)
 
-        tokenizer = BertTokenizerFast.from_pretrained(
-            "bert-base-uncased"
-        )
-
-        bert = BertModel.from_pretrained(
-            "bert-base-uncased",
-            quantization_config=bnb_config,
-            low_cpu_mem_usage=True,
-            device_map=(
-                "cuda:0" if torch.cuda.is_available() else None
-            ),
-        )
-
-        # Load the trained BERT LoRA adapter
-        bert_ft_path = os.path.join(
-            ft_path,
-            "Bert_ft",
-        )
+        bert_ft_path = os.path.join(ft_path, "Bert_ft")
 
         if not os.path.exists(bert_ft_path):
-            raise FileNotFoundError(
-                f"BERT LoRA checkpoint not found:\n"
-                f"{bert_ft_path}"
-            )
+            raise FileNotFoundError(f"BERT LoRA checkpoint not found:\n{bert_ft_path}")
 
         bert = PeftModel.from_pretrained(
             bert,
             bert_ft_path,
             is_trainable=False,
-            torch_dtype=torch.float16,
+            torch_dtype=torch.float16
         )
 
         bert.eval()
-
         return tokenizer, bert
 
     elif encoder_name == "bert":
-
-        tokenizer = BertTokenizerFast.from_pretrained(
-            "bert-base-uncased"
-        )
-
-        bert = BertModel.from_pretrained(
-            "bert-base-uncased",
-            quantization_config=bnb_config,
-            low_cpu_mem_usage=True,
-            device_map=(
-                "cuda:0" if torch.cuda.is_available() else None
-            ),
-        )
-
+        tokenizer = BertTokenizerFast.from_pretrained("bert-base-uncased")
+        bert = BertModel.from_pretrained("bert-base-uncased", quantization_config=bnb_config, low_cpu_mem_usage=True, device_map="cuda:0" if torch.cuda.is_available() else None)
+        
         bert.eval()
-
         return tokenizer, bert
 
     elif encoder_name == "sbert":
-
-        tokenizer = AutoTokenizer.from_pretrained(
-            model_name
-        )
-
+        tokenizer = AutoTokenizer.from_pretrained(model_name)
         model = AutoModel.from_pretrained(
             model_name,
             quantization_config=bnb_config,
             low_cpu_mem_usage=True,
-            device_map=(
-                "cuda:0" if torch.cuda.is_available() else None
-            ),
+            device_map="cuda:0" if torch.cuda.is_available() else None,
         )
 
         model.eval()
-
         return tokenizer, model
 
     elif encoder_name == "bge":
-
-        tokenizer = AutoTokenizer.from_pretrained(
-            model_name
-        )
-
+        tokenizer = AutoTokenizer.from_pretrained(model_name)
         model = AutoModel.from_pretrained(
             model_name,
             quantization_config=bnb_config,
             low_cpu_mem_usage=True,
-            device_map=(
-                "cuda:0" if torch.cuda.is_available() else None
-            ),
+            device_map="cuda:0" if torch.cuda.is_available() else None,
             trust_remote_code=True,
         )
 
         model.eval()
-
         return tokenizer, model
 
     elif encoder_name == "qwen":
-
-        tokenizer = AutoTokenizer.from_pretrained(
-            model_name
-        )
-
+        tokenizer = AutoTokenizer.from_pretrained(model_name)
         model = AutoModel.from_pretrained(
             model_name,
             quantization_config=bnb_config,
-            device_map=(
-                "cuda:0" if torch.cuda.is_available() else None
-            ),
+            device_map="cuda:0" if torch.cuda.is_available() else None,
             low_cpu_mem_usage=True,
             trust_remote_code=True,
         )
 
         model.eval()
-
         return tokenizer, model
 
-
-# ============================================================
-# 6. Extract embeddings
-#    Preserved from the original extraction script
-# ============================================================
-
 def extract_embeddings(logs, batch_size=32):
-
     all_embeddings = []
 
     encoder.eval()
 
-    for start_idx in tqdm(
-        range(0, len(logs), batch_size),
-        desc=f"Extracting {encoder_name} embeddings",
-    ):
-
-        batch_logs = logs[
-            start_idx : start_idx + batch_size
-        ]
-
-        # Same tokenization settings as the original script.
-        # Do not normalize the content again.
-        inputs = tokenizer(
-            batch_logs,
-            return_tensors="pt",
-            max_length=MAX_LENGTH,
-            padding=True,
-            truncation=True,
-        )
-
-        inputs = {
-            key: value.to(device)
-            for key, value in inputs.items()
-        }
-
+    for start_idx in tqdm(range(0, len(logs), batch_size),desc=f"Extracting {encoder_name} embeddings"):
+        batch_logs = logs[start_idx:start_idx + batch_size]
+        inputs = tokenizer(batch_logs, return_tensors="pt", max_length=100, padding=True, truncation=True) # tokenizer
+        inputs = {key: value.to(device) for key, value in inputs.items()} # Move to gpu
+        
+        # Forward Pass
         with torch.no_grad():
-
             encoder_outputs = encoder(**inputs)
-
             if pooling == "bert_cls":
-
                 embeddings = encoder_outputs.pooler_output
-
             elif pooling == "sbert_mean":
-
                 last_hidden = encoder_outputs.last_hidden_state
-
-                attention_mask = (
-                    inputs["attention_mask"].unsqueeze(-1)
-                )
-
+                attention_mask = inputs["attention_mask"].unsqueeze(-1)
                 embeddings = (
                     (last_hidden * attention_mask).sum(dim=1)
                     / attention_mask.sum(dim=1).clamp(min=1)
                 )
-
             elif pooling == "bge_cls":
-
-                embeddings = (
-                    encoder_outputs.last_hidden_state[:, 0]
-                )
-
+                embeddings = encoder_outputs.last_hidden_state[:, 0]
             elif pooling == "qwen_last":
-
                 last_hidden = encoder_outputs.last_hidden_state
-
-                sequence_lengths = (
-                    inputs["attention_mask"].sum(dim=1) - 1
-                )
-
+                sequence_lengths = inputs["attention_mask"].sum(dim=1) - 1
                 embeddings = last_hidden[
-                    torch.arange(
-                        last_hidden.size(0),
-                        device=last_hidden.device,
-                    ),
-                    sequence_lengths,
+                    torch.arange(last_hidden.size(0), device=last_hidden.device), 
+                    sequence_lengths
                 ]
-
             else:
-                raise ValueError(
-                    f"Unknown pooling method: {pooling}"
-                )
-
+                raise ValueError(f"Unknown pooling method: {pooling}")
             embeddings = embeddings.float().cpu().numpy()
 
         all_embeddings.append(embeddings)
 
-    if not all_embeddings:
-        raise ValueError(
-            "No embeddings extracted: the input log list is empty."
-        )
-
-    all_embeddings = np.concatenate(
-        all_embeddings,
-        axis=0,
-    )
+    # Combine all batches
+    all_embeddings = np.concatenate(all_embeddings, axis=0)
 
     return all_embeddings
-
 
 # ============================================================
 # 7. Load and validate probe datasets

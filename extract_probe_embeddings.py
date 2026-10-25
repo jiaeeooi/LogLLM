@@ -270,7 +270,6 @@ def save_embeddings(split_name, embeddings, labels, logs):
         )
 
     output_path = (OUTPUT_DIR / f"{split_name}_embeddings.npz")
-
     np.savez_compressed(output_path, embeddings=embeddings, labels=labels, content=np.asarray(logs, dtype=str),)
 
     print(f"\nSaved {split_name} embeddings:")
@@ -319,7 +318,6 @@ def main():
     print("=" * 70)
 
     train_embeddings = extract_embeddings(train_logs, batch_size=32)
-
     train_output_path = save_embeddings("train", train_embeddings, train_labels, train_logs)
 
     # Extract test embeddings using the same encoder
@@ -328,7 +326,6 @@ def main():
     print("=" * 70)
 
     test_embeddings = extract_embeddings(test_logs, batch_size=32)
-
     test_output_path = save_embeddings("test", test_embeddings, test_labels, test_logs)
 
     # Final consistency checks

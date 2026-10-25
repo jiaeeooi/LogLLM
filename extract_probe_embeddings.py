@@ -16,15 +16,15 @@ dataset_name = "BGL"
 #   "bge"         - BGE-M3 replacement
 #   "qwen"        - Qwen replacement
 encoder_name = "reproduced"
-DATA_DIR = Path("/content/drive/MyDrive/LogLLM/BGL")
 
 # -------------------------------------------
 
+DATA_DIR = Path(f"/content/drive/MyDrive/LogLLM/{dataset_name}")
 ROOT_DIR = Path(__file__).parent
 TRAIN_PATH = DATA_DIR / "train_probe.csv"
 TEST_PATH = DATA_DIR / "test_probe.csv"
 
-RESULTS_DIR = Path("/content/drive/MyDrive/LogLLM/results/lr_probe")
+RESULTS_DIR = Path(f"/content/drive/MyDrive/LogLLM/{dataset_name}/lr_probe")
 OUTPUT_DIR = RESULTS_DIR / encoder_name
 OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
@@ -254,19 +254,14 @@ def load_probe_data(path, split_name):
 
     return logs, labels
 
-# ============================================================
-# 8. Save embeddings and labels together
-# ============================================================
-
-def save_embeddings(split_name, embeddings, labels, logs,):
-
+# Save embeddings and labels together
+def save_embeddings(split_name, embeddings, labels, logs):
     if len(embeddings) != len(labels):
         raise ValueError(
             f"{split_name}: embedding count "
             f"({len(embeddings)}) does not match label count "
             f"({len(labels)})."
         )
-
     if len(embeddings) != len(logs):
         raise ValueError(
             f"{split_name}: embedding count "
@@ -274,16 +269,9 @@ def save_embeddings(split_name, embeddings, labels, logs,):
             f"({len(logs)})."
         )
 
-    output_path = (
-        OUTPUT_DIR / f"{split_name}_embeddings.npz"
-    )
+    output_path = (OUTPUT_DIR / f"{split_name}_embeddings.npz")
 
-    np.savez_compressed(
-        output_path,
-        embeddings=embeddings,
-        labels=labels,
-        content=np.asarray(logs, dtype=str),
-    )
+    np.savez_compressed(output_path, embeddings=embeddings, labels=labels, content=np.asarray(logs, dtype=str),)
 
     print(f"\nSaved {split_name} embeddings:")
     print(f"  Path: {output_path}")
@@ -292,13 +280,7 @@ def save_embeddings(split_name, embeddings, labels, logs,):
 
     return output_path
 
-
-# ============================================================
-# 9. Main: process train and test in the same run
-# ============================================================
-
 def main():
-
     print("=" * 70)
     print("LOGLLM LOGISTIC REGRESSION PROBE - EMBEDDING EXTRACTION")
     print("=" * 70)
@@ -312,75 +294,46 @@ def main():
     print(f"Output dir    : {OUTPUT_DIR}")
     print("=" * 70)
 
-    # Load both splits first.
-    train_logs, train_labels = load_probe_data(
-        TRAIN_PATH,
-        "Train",
-    )
+    # Load both splits first
+    train_logs, train_labels = load_probe_data(TRAIN_PATH, "Train")
 
-    test_logs, test_labels = load_probe_data(
-        TEST_PATH,
-        "Test",
-    )
+    test_logs, test_labels = load_probe_data(TEST_PATH, "Test",)
 
-    # Check for accidental template overlap.
+    # Check for accidental template overlap
     overlap = set(train_logs).intersection(test_logs)
 
     if overlap:
-        raise ValueError(
-            f"Found {len(overlap)} log templates in both "
-            "probe train and test datasets. Resolve the overlap "
-            "before extracting embeddings."
-        )
+        raise ValueError(f"Found {len(overlap)} log templates in both probe train and test datasets. Resolve before extracting.")
 
     print("\nTrain/test template overlap check passed.")
 
-    # Load the selected encoder only once.
+    # Load the selected encoder only once
     global tokenizer, encoder
-
     tokenizer, encoder = load_encoder()
 
     print("\nEncoder loaded successfully.")
 
-    # Extract train embeddings.
+    # Extract train embeddings
     print("\n" + "=" * 70)
     print("EXTRACTING TRAIN EMBEDDINGS")
     print("=" * 70)
 
-    train_embeddings = extract_embeddings(
-        train_logs,
-        batch_size=BATCH_SIZE,
-    )
+    train_embeddings = extract_embeddings(train_logs, batch_size=32)
 
-    train_output_path = save_embeddings(
-        "train",
-        train_embeddings,
-        train_labels,
-        train_logs,
-    )
+    train_output_path = save_embeddings("train", train_embeddings, train_labels, train_logs)
 
-    # Extract test embeddings using the same encoder.
+    # Extract test embeddings using the same encoder
     print("\n" + "=" * 70)
     print("EXTRACTING TEST EMBEDDINGS")
     print("=" * 70)
 
-    test_embeddings = extract_embeddings(
-        test_logs,
-        batch_size=BATCH_SIZE,
-    )
+    test_embeddings = extract_embeddings(test_logs, batch_size=32)
 
-    test_output_path = save_embeddings(
-        "test",
-        test_embeddings,
-        test_labels,
-        test_logs,
-    )
+    test_output_path = save_embeddings("test", test_embeddings, test_labels, test_logs)
 
-    # Final consistency checks.
+    # Final consistency checks
     if train_embeddings.shape[1] != test_embeddings.shape[1]:
-        raise ValueError(
-            "Train and test embedding dimensions do not match."
-        )
+        raise ValueError("Train and test embedding dimensions do not match.")
 
     print("\n" + "=" * 70)
     print("EXTRACTION COMPLETE")

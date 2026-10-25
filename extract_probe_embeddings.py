@@ -85,11 +85,6 @@ elif encoder_name == "bge":
 elif encoder_name == "qwen":
     ft_path = f"/content/drive/MyDrive/LogLLM/results/ft_model_{dataset_name}_qwen"
 
-# ============================================================
-# 4. Device and quantization
-#    Preserved from the original extraction script
-# ============================================================
-
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 print(f"\nDevice: {device}")
 

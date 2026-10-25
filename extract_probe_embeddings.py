@@ -207,56 +207,30 @@ def extract_embeddings(logs, batch_size=32):
 
     return all_embeddings
 
-# ============================================================
-# 7. Load and validate probe datasets
-# ============================================================
-
+# Load and validate probe datasets
 def load_probe_data(path, split_name):
-
     if not path.exists():
-        raise FileNotFoundError(
-            f"{split_name} probe dataset not found:\n{path}"
-        )
+        raise FileNotFoundError(f"{split_name} probe dataset not found:\n{path}")
 
     df = pd.read_csv(path)
-
     required_columns = {"content", "item_label"}
     missing_columns = required_columns - set(df.columns)
-
+    
     if missing_columns:
-        raise ValueError(
-            f"{split_name} dataset is missing columns: "
-            f"{missing_columns}"
-        )
-
+        raise ValueError(f"{split_name} dataset is missing columns: {missing_columns}")
     if df.empty:
-        raise ValueError(
-            f"{split_name} probe dataset is empty."
-        )
-
+        raise ValueError(f"{split_name} probe dataset is empty.")
     if df["content"].isna().any():
-        raise ValueError(
-            f"{split_name} dataset contains missing content."
-        )
-
+        raise ValueError(f"{split_name} dataset contains missing content.")
     if df["item_label"].isna().any():
-        raise ValueError(
-            f"{split_name} dataset contains missing labels."
-        )
+        raise ValueError(f"{split_name} dataset contains missing labels.")
 
-    # Content has already been normalized during probe preparation.
-    # Do not call replace_patterns() again.
     logs = df["content"].astype(str).tolist()
 
-    numeric_labels = pd.to_numeric(
-        df["item_label"],
-        errors="raise",
-    )
+    numeric_labels = pd.to_numeric(df["item_label"], errors="raise")
 
     if not np.all(numeric_labels.to_numpy() % 1 == 0):
-        raise ValueError(
-            f"{split_name} labels must be integers."
-        )
+        raise ValueError(f"{split_name} labels must be integers.")
 
     labels = numeric_labels.to_numpy(dtype=np.int64)
 
@@ -280,17 +254,11 @@ def load_probe_data(path, split_name):
 
     return logs, labels
 
-
 # ============================================================
 # 8. Save embeddings and labels together
 # ============================================================
 
-def save_embeddings(
-    split_name,
-    embeddings,
-    labels,
-    logs,
-):
+def save_embeddings(split_name, embeddings, labels, logs,):
 
     if len(embeddings) != len(labels):
         raise ValueError(

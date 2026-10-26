@@ -15,13 +15,16 @@ dataset_name = "BGL"
 #   "sbert"       - SBERT replacement
 #   "bge"         - BGE-M3 replacement
 #   "qwen"        - Qwen replacement
-encoder_name = "reproduced"
+encoder_name = "author"
 # Options:
-#   "encoder"     - embeddings before projector
-#   "projector"   - embeddings after projector
+#   "encoder"     - embeddings before the projector
+#   "projector"   - embeddings after the projector
 embedding = "projector"
 
 # -------------------------------------------
+
+if embedding not in ["encoder", "projector"]:
+    raise ValueError(f"Unknown embedding type: {embedding}")
 
 DATA_DIR = Path(f"/content/drive/MyDrive/LogLLM/{dataset_name}")
 ROOT_DIR = Path(__file__).parent
@@ -29,7 +32,7 @@ TRAIN_PATH = DATA_DIR / "train_probe.csv"
 TEST_PATH = DATA_DIR / "test_probe.csv"
 
 RESULTS_DIR = Path(f"/content/drive/MyDrive/LogLLM/{dataset_name}/lr_probe")
-OUTPUT_DIR = RESULTS_DIR / encoder_name
+OUTPUT_DIR = RESULTS_DIR / encoder_name / embedding  
 OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
 ENCODER_CONFIG = {
@@ -163,6 +166,34 @@ def load_encoder():
 
         model.eval()
         return tokenizer, model
+
+def load_projector():
+    projector_path = os.path.join(ft_path, "projector.pt")
+
+    if not os.path.exists(projector_path):
+        raise FileNotFoundError(f"Projector checkpoint not found:\n{projector_path}")
+
+    # Load the trained projector weights
+    projector_state = torch.load(projector_path, map_location="cpu", weights_only=True)
+
+    # Infer dimensions from the trained checkpoint
+    encoder_dim = encoder.config.hidden_size
+    projector_dim = projector_state["weight"].shape[0]
+
+    if projector_state["weight"].shape[1] != encoder_dim:
+        raise ValueError(f"Projector input dimension ({projector_state['weight'].shape[1]}) doesn't match encoder dimension ({encoder_dim}).")
+
+    projector = torch.nn.Linear(encoder_dim, projector_dim)
+
+    projector.load_state_dict(projector_state)
+    projector = projector.to(device)
+    projector.eval()
+
+    print(f"Projector checkpoint: {projector_path}")
+    print(f"Projector dimensions: {encoder_dim} -> {projector_dim}")
+
+    return projector
+
 
 def extract_embeddings(logs, batch_size=32):
     all_embeddings = []

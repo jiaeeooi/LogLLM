@@ -6,11 +6,15 @@ import pandas as pd
 from tqdm.auto import tqdm
 
 # File paths
-TRAIN_PATH = "/content/drive/MyDrive/LogLLM/BGL/bgl_train.csv"
-TEST_PATH = "/content/drive/MyDrive/LogLLM/BGL/bgl_test.csv"
+#TRAIN_PATH = "/content/drive/MyDrive/LogLLM/BGL/bgl_train.csv"
+#TEST_PATH = "/content/drive/MyDrive/LogLLM/BGL/bgl_test.csv"
+TRAIN_PATH = "/content/drive/MyDrive/LogLLM/Liberty/train.csv"
+TEST_PATH = "/content/drive/MyDrive/LogLLM/Liberty/test.csv"
 
-OUTPUT_TRAIN_PATH = "/content/drive/MyDrive/LogLLM/BGL/train_probe.csv"
-OUTPUT_TEST_PATH = "/content/drive/MyDrive/LogLLM/BGL/test_probe.csv"
+#OUTPUT_TRAIN_PATH = "/content/drive/MyDrive/LogLLM/BGL/train_probe.csv"
+#OUTPUT_TEST_PATH = "/content/drive/MyDrive/LogLLM/BGL/test_probe.csv"
+OUTPUT_TRAIN_PATH = "/content/drive/MyDrive/LogLLM/Liberty/train_probe.csv"
+OUTPUT_TEST_PATH = "/content/drive/MyDrive/LogLLM/Liberty/test_probe.csv"
 
 DELIMITER = " ;-; "
 
@@ -47,9 +51,7 @@ def extract_individual_logs(csv_path, split_name):
     missing_columns = required_columns - set(df.columns)
 
     if missing_columns:
-        raise ValueError(
-            f"{split_name} CSV is missing columns: {missing_columns}"
-        )
+        raise ValueError(f"{split_name} CSV is missing columns: {missing_columns}")
 
     logs = []
 

@@ -201,7 +201,7 @@ results_df = results_df.sort_values(
 ).reset_index(drop=True)
 
 print("\n\n" + "=" * 100)
-print("LOGISTIC REGRESSION PROBE — ENCODER COMPARISON")
+print(f"LOGISTIC REGRESSION PROBE — {embedding.upper()} EMBEDDING COMPARISON")
 print("=" * 100)
 
 print(

@@ -112,8 +112,6 @@ for encoder_name in ENCODERS:
 
 print("\nAll embedding files loaded and validated.")
 
-######################################################
-
 results = []
 
 for encoder_name in ENCODERS:
@@ -189,21 +187,10 @@ for encoder_name in ENCODERS:
         f"{int(np.sum(y_pred == POSITIVE_LABEL))} / {len(y_pred)}"
     )
 
-
-# ============================================================
 # COMPARISON TABLE
-# ============================================================
-
 results_df = pd.DataFrame(results)
 
-metric_columns = [
-    "ROC_AUC",
-    "PR_AUC_AP",
-    "F1",
-    "Precision",
-    "Recall",
-    "Accuracy",
-]
+metric_columns = ["ROC_AUC", "PR_AUC_AP", "F1", "Precision", "Recall", "Accuracy"]
 
 # Sort by ROC-AUC for convenient comparison
 results_df = results_df.sort_values(

@@ -15,6 +15,9 @@ from sklearn.metrics import (
 )
 
 dataset_name = "BGL"
+embeddinng = "projector" # "encoder" or "projector"
+
+# -----------------------------------------------
 
 DATA_DIR = Path(f"/content/drive/MyDrive/LogLLM/{dataset_name}")
 PROBE_DIR = DATA_DIR / "lr_probe"
@@ -26,7 +29,7 @@ RANDOM_SEED = 42
 POSITIVE_LABEL = 1
 
 def load_embeddings(encoder_name, split_name):
-    file_path = (PROBE_DIR/encoder_name/f"{split_name}_embeddings.npz")
+    file_path = (PROBE_DIR/encoder_name/embedding/f"{split_name}_embeddings.npz")
 
     if not file_path.exists():
         raise FileNotFoundError(f"Missing embedding file: {file_path}")
@@ -212,7 +215,7 @@ print(
 )
 
 # Save the full-precision results
-output_csv = PROBE_DIR / "logistic_regression_probe_results.csv"
+output_csv = PROBE_DIR / f"lrprobe_results_{embedding}.csv"
 results_df.to_csv(output_csv, index=False)
 
 print(f"\nResults saved to:\n{output_csv}")

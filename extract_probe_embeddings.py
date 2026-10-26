@@ -228,6 +228,11 @@ def extract_embeddings(logs, batch_size=32):
                 ]
             else:
                 raise ValueError(f"Unknown pooling method: {pooling}")
+
+            if embedding == "projector":
+                embeddings = projector(embeddings.float())
+                embeddings = embeddings.half()
+
             embeddings = embeddings.float().cpu().numpy()
 
         all_embeddings.append(embeddings)
@@ -313,14 +318,15 @@ def main():
     print("=" * 70)
     print("LOGLLM LOGISTIC REGRESSION PROBE - EMBEDDING EXTRACTION")
     print("=" * 70)
-    print(f"Dataset       : {dataset_name}")
-    print(f"Encoder       : {encoder_name}")
-    print(f"Model         : {model_name}")
-    print(f"Pooling       : {pooling}")
-    print(f"Checkpoint    : {ft_path}")
-    print(f"Train data    : {TRAIN_PATH}")
-    print(f"Test data     : {TEST_PATH}")
-    print(f"Output dir    : {OUTPUT_DIR}")
+    print(f"Dataset          : {dataset_name}")
+    print(f"Encoder          : {encoder_name}")
+    print(f"Model            : {model_name}")
+    print(f"Pooling          : {pooling}")
+    print(f"Encoder/Projector: {embedding}")
+    print(f"Checkpoint       : {ft_path}")
+    print(f"Train data       : {TRAIN_PATH}")
+    print(f"Test data        : {TEST_PATH}")
+    print(f"Output dir       : {OUTPUT_DIR}")
     print("=" * 70)
 
     # Load both splits first
@@ -337,10 +343,15 @@ def main():
     print("\nTrain/test template overlap check passed.")
 
     # Load the selected encoder only once
-    global tokenizer, encoder
+    global tokenizer, encoder, projector
     tokenizer, encoder = load_encoder()
+    projector = None
 
     print("\nEncoder loaded successfully.")
+
+    if embedding == "projector":
+        projector = load_projector()
+        print("\nTrained projector loaded successfully.")
 
     # Extract train embeddings
     print("\n" + "=" * 70)
@@ -368,6 +379,7 @@ def main():
     print(f"Dataset: {dataset_name}")
     print(f"Encoder: {encoder_name}")
     print(f"Pooling: {pooling}")
+    print(f"Embedding: {embedding}")
     print(f"Train embedding shape: {train_embeddings.shape}")
     print(f"Test embedding shape:  {test_embeddings.shape}")
     print("\nFiles saved:")
@@ -376,6 +388,9 @@ def main():
     print("=" * 70)
 
     del encoder
+
+    if projector is not None:
+        del projector
 
     if torch.cuda.is_available():
         torch.cuda.empty_cache()

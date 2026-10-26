@@ -16,6 +16,10 @@ dataset_name = "BGL"
 #   "bge"         - BGE-M3 replacement
 #   "qwen"        - Qwen replacement
 encoder_name = "reproduced"
+# Options:
+#   "encoder"     - embeddings before projector
+#   "projector"   - embeddings after projector
+embedding = "projector"
 
 # -------------------------------------------
 

@@ -491,47 +491,27 @@ def run_analysis(dataset_name, datasets):
 # ============================================================
 
 def main():
-
     all_results = []
 
     for dataset_name in DATASETS:
-
         print("\n" + "#" * 80)
         print(f"PROCESSING DATASET: {dataset_name}")
         print("#" * 80)
 
         datasets = {}
 
-        # Load and validate all 12 embeddings for this dataset
-        validate_embeddings(
-            dataset_name,
-            datasets
-        )
-
-        # Run analysis
-        results_df = run_analysis(
-            dataset_name,
-            datasets
-        )
-
+        validate_embeddings(dataset_name, datasets) # Load and validate all 12 embeddings for this dataset
+        results_df = run_analysis(dataset_name, datasets) # Run analysis
         all_results.append(results_df)
 
         del datasets
 
     # Combine BGL and Liberty results
-    combined_results = pd.concat(
-        all_results,
-        ignore_index=True
-    )
+    combined_results = pd.concat(all_results, ignore_index=True)
 
-    combined_output = Path(
-        "/content/drive/MyDrive/LogLLM/representation_analysis_all_results.csv"
-    )
+    combined_output = Path("/content/drive/MyDrive/LogLLM/representation_analysis_all_results.csv")
 
-    combined_results.to_csv(
-        combined_output,
-        index=False
-    )
+    combined_results.to_csv(combined_output, index=False)
 
     print("\nAll representation analyses completed.")
     print(f"Combined results saved to:\n{combined_output}")

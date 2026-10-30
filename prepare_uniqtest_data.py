@@ -88,11 +88,11 @@ def prepare_test_set(csv_path, output_path, dataset_name):
 
         for template in conflicting_templates.index:
             subset = result[result["content"] == template]
-
             print(f"\nMessage: {template}")
             print(subset["item_label"].value_counts().sort_index())
 
-        raise ValueError(f"{dataset_name}: Conflicting labels found. Deduplication stopped.")
+        result = result[~result["content"].isin(conflicting_templates.index)].copy()
+        print(f"\nExcluded {len(conflicting_templates):,} conflicting unique messages.")
 
     # Remove duplicate messages
     deduplicated = result.drop_duplicates(subset=["content"], keep="first").copy()

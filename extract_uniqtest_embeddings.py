@@ -14,6 +14,9 @@ embedding = "encoder"      # "encoder" or "projector"
 
 # -------------------------------------------
 
+if embedding not in ["encoder", "projector"]:
+    raise ValueError(f"Unknown embedding type: {embedding}")
+
 DATA_DIR = Path(f"/content/drive/MyDrive/LogLLM/{dataset_name}")
 ROOT_DIR = Path(__file__).parent
 
@@ -56,6 +59,9 @@ ENCODER_CONFIG = {
     }
 }
 
+if encoder_name not in ENCODER_CONFIG:
+    raise ValueError(f"Unknown encoder_name: {encoder_name}")
+
 if encoder_name == "author":
     ft_path = os.path.join(ROOT_DIR, r"ft_model_{}".format(dataset_name))
 elif encoder_name == "reproduced":
@@ -68,13 +74,6 @@ elif encoder_name == "bge":
     ft_path = f"/content/drive/MyDrive/LogLLM/results/ft_model_{dataset_name}_bgem3"
 elif encoder_name == "qwen":
     ft_path = f"/content/drive/MyDrive/LogLLM/results/ft_model_{dataset_name}_qwen"
-
-if encoder_name not in ENCODER_CONFIG:
-    raise ValueError(f"Unknown encoder_name: {encoder_name}")
-
-if embedding not in ["encoder", "projector"]:
-    raise ValueError(f"Unknown embedding type: {embedding}")
-
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
@@ -138,121 +137,76 @@ def load_projector(encoder):
 
     return projector
 
-
 def extract_embeddings(logs, tokenizer, encoder, projector=None, batch_size=32):
     all_embeddings = []
     pooling = ENCODER_CONFIG[encoder_name]["pooling"]
+    encoder.eval()
 
-    for i in range(0, len(logs), batch_size):
-
-        batch_logs = logs[i:i + batch_size]
-
-        inputs = tokenizer(
-            batch_logs,
-            max_length=100,
-            padding=True,
-            truncation=True,
-            return_tensors="pt"
-        )
-
-        inputs = {
-            key: value.to(device)
-            for key, value in inputs.items()
-        }
+    for start_idx in tqdm(range(0, len(logs), batch_size), desc=f"Extracting {encoder_name} embeddings"):
+        batch_logs = logs[start_idx:start_idx + batch_size]
+        inputs = tokenizer(batch_logs, return_tensors="pt", max_length=100, padding=True, truncation=True)
+        inputs = {key: value.to(device) for key, value in inputs.items()}
 
         with torch.no_grad():
-
             encoder_outputs = encoder(**inputs)
-
             if pooling == "bert_cls":
-
                 embeddings = encoder_outputs.pooler_output
-
             elif pooling == "sbert_mean":
-
-                token_embeddings = encoder_outputs.last_hidden_state
-
-                attention_mask = inputs["attention_mask"]
-
-                mask = attention_mask.unsqueeze(-1).expand(
-                    token_embeddings.size()
-                ).float()
-
-                embeddings = torch.sum(
-                    token_embeddings * mask,
-                    dim=1
-                ) / torch.clamp(mask.sum(dim=1), min=1e-9)
-
+                last_hidden = encoder_outputs.last_hidden_state
+                attention_mask = inputs["attention_mask"].unsqueeze(-1)
+                embeddings = (
+                    (last_hidden * attention_mask).sum(dim=1)
+                    / attention_mask.sum(dim=1).clamp(min=1)
+                )
             elif pooling == "bge_cls":
-
                 embeddings = encoder_outputs.last_hidden_state[:, 0]
-
             elif pooling == "qwen_last":
-
-                last_hidden_state = encoder_outputs.last_hidden_state
-
-                attention_mask = inputs["attention_mask"]
-
-                sequence_lengths = attention_mask.sum(dim=1) - 1
-
-                embeddings = last_hidden_state[
-                    torch.arange(
-                        last_hidden_state.size(0),
-                        device=last_hidden_state.device
-                    ),
+                last_hidden = encoder_outputs.last_hidden_state
+                sequence_lengths = inputs["attention_mask"].sum(dim=1) - 1
+                embeddings = last_hidden[
+                    torch.arange(last_hidden.size(0), device=last_hidden.device),
                     sequence_lengths
                 ]
-
             else:
                 raise ValueError(f"Unknown pooling method: {pooling}")
 
-            # Apply projector only when requested
             if embedding == "projector":
-
                 if projector is None:
                     raise ValueError("Projector has not been loaded.")
+                embeddings = projector(embeddings.float())
+                embeddings = embeddings.half()
 
-                embeddings = projector(embeddings.float()).half()
+            embeddings = embeddings.float().cpu().numpy()
 
-            all_embeddings.append(
-                embeddings.float().cpu().numpy()
-            )
+        all_embeddings.append(embeddings)
 
-        del inputs, encoder_outputs, embeddings
-
-    return np.concatenate(all_embeddings, axis=0)
-
-
-# ============================================================
-# 9. Load deduplicated test data
-# ============================================================
+    all_embeddings = np.concatenate(all_embeddings, axis=0)
+    return all_embeddings
 
 def load_test_data(path):
-
     df = pd.read_csv(path)
-
     required_columns = ["content", "item_label"]
 
     for column in required_columns:
         if column not in df.columns:
             raise ValueError(f"Missing column: {column}")
-
     if df.empty:
         raise ValueError("Test dataset is empty.")
-
     if df[required_columns].isnull().any().any():
         raise ValueError("Test dataset contains missing values.")
 
     logs = df["content"].astype(str).tolist()
+    numeric_labels = pd.to_numeric(df["item_label"], errors="raise")
 
-    labels = df["item_label"].astype(int).to_numpy()
+    if not np.all(numeric_labels.to_numpy() % 1 == 0):
+        raise ValueError("Test labels must be integers.")
+
+    labels = numeric_labels.to_numpy(dtype=np.int64)
 
     if not set(np.unique(labels)).issubset({0, 1}):
         raise ValueError("Labels must contain only 0 and 1.")
-
     if len(logs) != len(labels):
         raise ValueError("Number of logs and labels do not match.")
-
     if df["content"].duplicated().any():
         raise ValueError("Test dataset contains duplicate log messages.")
 
@@ -262,71 +216,35 @@ def load_test_data(path):
 
     return logs, labels
 
-
-# ============================================================
-# 10. Save embeddings
-# ============================================================
-
 def save_embeddings(embeddings, labels, logs):
-
     output_path = OUTPUT_DIR / "test_embeddings.npz"
-
-    np.savez_compressed(
-        output_path,
-        embeddings=embeddings,
-        labels=labels,
-        content=np.asarray(logs, dtype=str)
-    )
-
+    np.savez_compressed(output_path, embeddings=embeddings, labels=labels, content=np.asarray(logs, dtype=str))
     print(f"Saved embeddings to: {output_path}")
 
-
-# ============================================================
-# 11. Main
-# ============================================================
-
 def main():
-
     print("=" * 60)
     print(f"Dataset: {dataset_name}")
     print(f"Encoder: {encoder_name}")
     print(f"Embedding: {embedding}")
     print("=" * 60)
 
-    # Load test data
     logs, labels = load_test_data(TEST_PATH)
-
-    # Load encoder and tokenizer
     tokenizer, encoder = load_encoder()
-
-    # Load projector only when needed
     projector = None
 
     if embedding == "projector":
         projector = load_projector(encoder)
 
     # Extract embeddings
-    embeddings = extract_embeddings(
-        logs,
-        tokenizer,
-        encoder,
-        projector
-    )
+    embeddings = extract_embeddings(logs, tokenizer, encoder, projector)
 
     print(f"Embedding shape: {embeddings.shape}")
 
-    # Check output
     if len(embeddings) != len(labels):
-        raise ValueError(
-            "Number of embeddings does not match number of labels."
-        )
+        raise ValueError("Number of embeddings does not match number of labels.")
 
     # Save embeddings
-    save_embeddings(
-        embeddings,
-        labels,
-        logs
-    )
+    save_embeddings(embeddings, labels, logs)
 
     print("Representation embedding extraction completed.")
 
@@ -336,7 +254,6 @@ def main():
 
     if torch.cuda.is_available():
         torch.cuda.empty_cache()
-
 
 if __name__ == "__main__":
     main()

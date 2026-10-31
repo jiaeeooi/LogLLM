@@ -12,9 +12,6 @@ EMBEDDINGS = ["encoder", "projector"]
 RANDOM_SEED = 42
 MAX_COSINE_PAIRS = 100000
 SILHOUETTE_SAMPLE_SIZE = 5000
-# UMAP settings
-UMAP_NEIGHBORS = 15
-UMAP_MIN_DIST = 0.1
 
 def load_embeddings(dataset_name, encoder_name, embedding):
     data_dir = Path(f"/content/drive/MyDrive/LogLLM/{dataset_name}/representation_analysis")
@@ -222,38 +219,22 @@ def calculate_silhouette(X, y):
 
     return score
 
-
-# ============================================================
-# 7. UMAP visualization
-# ============================================================
-
+# UMAP visualization
 def generate_umap(X, y, content, dataset_name, encoder_name, embedding, output_dir):
     n_samples = len(X)
     if n_samples < 4:
         raise ValueError(f"Not enough samples for UMAP: {n_samples}")
-
-    n_neighbors = min(UMAP_NEIGHBORS, n_samples - 1)
+    n_neighbors = min(15, n_samples - 1)
 
     reducer = umap.UMAP(
         n_components=2,
         n_neighbors=n_neighbors,
-        min_dist=UMAP_MIN_DIST,
+        min_dist=0.1,
         metric="cosine",
         random_state=RANDOM_SEED
     )
 
     X_umap = reducer.fit_transform(X)
-
-    # Save UMAP coordinates
-    umap_df = pd.DataFrame({
-        "content": content,
-        "label": y,
-        "UMAP_1": X_umap[:, 0],
-        "UMAP_2": X_umap[:, 1]
-    })
-
-    umap_csv = output_dir / (f"umap_{encoder_name}_{embedding}.csv")
-    umap_df.to_csv(umap_csv, index=False)
 
     # Plot
     plt.figure(figsize=(8, 6))

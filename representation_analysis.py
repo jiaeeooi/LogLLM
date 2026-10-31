@@ -92,15 +92,11 @@ def validate_embeddings(dataset_name, datasets):
 # ============================================================
 
 def calculate_norms(X, y):
-
     norms = np.linalg.norm(X, axis=1)
-
     results = {}
 
     for label, class_name in [(0, "normal"), (1, "anomalous")]:
-
         class_norms = norms[y == label]
-
         results[f"{class_name}_norm_mean"] = np.mean(class_norms)
         results[f"{class_name}_norm_std"] = np.std(class_norms)
         results[f"{class_name}_norm_median"] = np.median(class_norms)
@@ -113,76 +109,41 @@ def calculate_norms(X, y):
 
     return norms, results
 
-
 # ============================================================
 # 5. Cosine similarity analysis
 # ============================================================
 
 def sample_within_class_cosine(X_normalized, indices, max_pairs, rng):
-
     n_samples = len(indices)
-
     if n_samples < 2:
         return np.array([])
-
-    n_pairs = min(
-        max_pairs,
-        n_samples * (n_samples - 1)
-    )
+    n_pairs = min(max_pairs, n_samples * (n_samples - 1))
 
     # Sample two different indices from the same class
     first_idx = rng.integers(0, n_samples, size=n_pairs)
-
     second_idx = rng.integers(0, n_samples - 1, size=n_pairs)
-
     second_idx += (second_idx >= first_idx)
 
     first = X_normalized[indices[first_idx]]
     second = X_normalized[indices[second_idx]]
-
     similarities = np.sum(first * second, axis=1)
 
     return similarities
 
 
-def sample_between_class_cosine(
-    X_normalized,
-    indices_a,
-    indices_b,
-    max_pairs,
-    rng
-):
-
+def sample_between_class_cosine(X_normalized, indices_a, indices_b, max_pairs, rng):
     if len(indices_a) == 0 or len(indices_b) == 0:
         return np.array([])
 
-    n_pairs = min(
-        max_pairs,
-        len(indices_a) * len(indices_b)
-    )
-
-    first_idx = rng.choice(
-        indices_a,
-        size=n_pairs,
-        replace=True
-    )
-
-    second_idx = rng.choice(
-        indices_b,
-        size=n_pairs,
-        replace=True
-    )
-
-    similarities = np.sum(
-        X_normalized[first_idx] * X_normalized[second_idx],
-        axis=1
-    )
+    n_pairs = min(max_pairs, len(indices_a) * len(indices_b))
+    first_idx = rng.choice(indices_a, size=n_pairs, replace=True)
+    second_idx = rng.choice(indices_b, size=n_pairs, replace=True)
+    similarities = np.sum(X_normalized[first_idx] * X_normalized[second_idx], axis=1)
 
     return similarities
 
 
 def cosine_summary(similarities, name):
-
     if len(similarities) == 0:
         return {
             f"{name}_cosine_mean": np.nan,
@@ -198,9 +159,7 @@ def cosine_summary(similarities, name):
 
 
 def calculate_cosine_similarity(X, y):
-
-    # Normalize each embedding to unit length
-    norms = np.linalg.norm(X, axis=1, keepdims=True)
+    norms = np.linalg.norm(X, axis=1, keepdims=True) # Normalize each embedding to unit length
 
     X_normalized = X / np.maximum(norms, 1e-12)
 
@@ -235,18 +194,9 @@ def calculate_cosine_similarity(X, y):
     )
 
     results = {}
-
-    results.update(
-        cosine_summary(normal_normal, "normal_normal")
-    )
-
-    results.update(
-        cosine_summary(anomalous_anomalous, "anomalous_anomalous")
-    )
-
-    results.update(
-        cosine_summary(normal_anomalous, "normal_anomalous")
-    )
+    results.update(cosine_summary(normal_normal, "normal_normal"))
+    results.update(cosine_summary(anomalous_anomalous, "anomalous_anomalous"))
+    results.update(cosine_summary(normal_anomalous, "normal_anomalous"))
 
     return results
 
@@ -256,16 +206,11 @@ def calculate_cosine_similarity(X, y):
 # ============================================================
 
 def calculate_silhouette(X, y):
-
     unique_labels, counts = np.unique(y, return_counts=True)
-
     if len(unique_labels) < 2 or np.min(counts) < 2:
         return np.nan
 
-    sample_size = min(
-        SILHOUETTE_SAMPLE_SIZE,
-        len(X)
-    )
+    sample_size = min(SILHOUETTE_SAMPLE_SIZE, len(X))
 
     score = silhouette_score(
         X,
@@ -282,27 +227,12 @@ def calculate_silhouette(X, y):
 # 7. UMAP visualization
 # ============================================================
 
-def generate_umap(
-    X,
-    y,
-    content,
-    dataset_name,
-    encoder_name,
-    embedding,
-    output_dir
-):
-
+def generate_umap(X, y, content, dataset_name, encoder_name, embedding, output_dir):
     n_samples = len(X)
-
     if n_samples < 4:
-        raise ValueError(
-            f"Not enough samples for UMAP: {n_samples}"
-        )
+        raise ValueError(f"Not enough samples for UMAP: {n_samples}")
 
-    n_neighbors = min(
-        UMAP_NEIGHBORS,
-        n_samples - 1
-    )
+    n_neighbors = min(UMAP_NEIGHBORS, n_samples - 1)
 
     reducer = umap.UMAP(
         n_components=2,
@@ -322,10 +252,7 @@ def generate_umap(
         "UMAP_2": X_umap[:, 1]
     })
 
-    umap_csv = output_dir / (
-        f"umap_{encoder_name}_{embedding}.csv"
-    )
-
+    umap_csv = output_dir / (f"umap_{encoder_name}_{embedding}.csv")
     umap_df.to_csv(umap_csv, index=False)
 
     # Plot
@@ -341,7 +268,6 @@ def generate_umap(
         alpha=0.6,
         s=15
     )
-
     plt.scatter(
         X_umap[anomalous_mask, 0],
         X_umap[anomalous_mask, 1],
@@ -349,27 +275,13 @@ def generate_umap(
         alpha=0.7,
         s=20
     )
-
-    plt.title(
-        f"{dataset_name} - {encoder_name} - {embedding}"
-    )
-
+    plt.title(f"{dataset_name} - {encoder_name} - {embedding}")
     plt.xlabel("UMAP 1")
     plt.ylabel("UMAP 2")
-
     plt.legend()
     plt.tight_layout()
-
-    plot_path = output_dir / (
-        f"umap_{encoder_name}_{embedding}.png"
-    )
-
-    plt.savefig(
-        plot_path,
-        dpi=300,
-        bbox_inches="tight"
-    )
-
+    plot_path = output_dir / (f"umap_{encoder_name}_{embedding}.png")
+    plt.savefig(plot_path, dpi=300, bbox_inches="tight")
     plt.close()
 
     return X_umap
@@ -380,17 +292,11 @@ def generate_umap(
 # ============================================================
 
 def run_analysis(dataset_name, datasets):
-
     results = []
-
-    output_dir = Path(
-        f"/content/drive/MyDrive/LogLLM/{dataset_name}/representation_analysis"
-    )
+    output_dir = Path(f"/content/drive/MyDrive/LogLLM/{dataset_name}/representation_analysis")
 
     for embedding in EMBEDDINGS:
-
         for encoder_name in ENCODERS:
-
             print("\n" + "=" * 70)
             print(f"Dataset: {dataset_name}")
             print(f"Encoder: {encoder_name}")
@@ -406,30 +312,17 @@ def run_analysis(dataset_name, datasets):
             print(f"Samples: {len(X)}")
             print(f"Embedding dimension: {X.shape[1]}")
 
-            # ----------------------------------------
             # Embedding norm
-            # ----------------------------------------
-
             norms, norm_results = calculate_norms(X, y)
 
-            # ----------------------------------------
             # Cosine similarity
-            # ----------------------------------------
-
             cosine_results = calculate_cosine_similarity(X, y)
 
-            # ----------------------------------------
             # Silhouette score
-            # ----------------------------------------
-
             silhouette = calculate_silhouette(X, y)
-
             print(f"Silhouette score: {silhouette:.4f}")
 
-            # ----------------------------------------
             # UMAP
-            # ----------------------------------------
-
             X_umap = generate_umap(
                 X,
                 y,
@@ -440,10 +333,7 @@ def run_analysis(dataset_name, datasets):
                 output_dir
             )
 
-            # ----------------------------------------
             # Store results
-            # ----------------------------------------
-
             metrics = {
                 "dataset": dataset_name,
                 "encoder": encoder_name,
@@ -460,29 +350,18 @@ def run_analysis(dataset_name, datasets):
 
             results.append(metrics)
 
-    # ----------------------------------------
     # Save comparison table
-    # ----------------------------------------
-
     results_df = pd.DataFrame(results)
-
     output_csv = output_dir / "representation_analysis_results.csv"
-
     results_df.to_csv(output_csv, index=False)
 
     print("\n\n" + "=" * 100)
     print(f"REPRESENTATION ANALYSIS — {dataset_name}")
     print("=" * 100)
 
-    print(
-        results_df.to_string(
-            index=False,
-            float_format=lambda x: f"{x:.4f}"
-        )
-    )
-
+    print(results_df.to_string(index=False, float_format=lambda x: f"{x:.4f}"))
+    
     print(f"\nResults saved to:\n{output_csv}")
-
     return results_df
 
 

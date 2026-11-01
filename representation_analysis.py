@@ -83,11 +83,6 @@ def validate_embeddings(dataset_name, datasets):
             print(f"Shape: {X.shape}, Normal: {(y == 0).sum()}, Anomalous: {(y == 1).sum()}")
     print("\nAll embedding files loaded and validated.")
 
-
-# ============================================================
-# 4. Embedding norm analysis
-# ============================================================
-
 def calculate_norms(X, y):
     norms = np.linalg.norm(X, axis=1)
     results = {}
@@ -105,6 +100,19 @@ def calculate_norms(X, y):
     results["overall_norm_median"] = np.median(norms)
 
     return norms, results
+
+'''
+def plot_norms(norms, y, dataset_name, encoder_name, embedding, output_dir):
+    plt.figure(figsize=(7, 5))
+    plt.boxplot([norms[y == 0], norms[y == 1]], tick_labels=["Normal", "Anomalous"])
+
+    plt.title(f"{dataset_name} - {encoder_name} - {embedding}")
+    plt.ylabel("Embedding L2 Norm")
+    plt.tight_layout()
+
+    plt.savefig(output_dir / f"norms_{encoder_name}_{embedding}.png", dpi=300, bbox_inches="tight")
+    plt.close()
+'''
 
 # ============================================================
 # 5. Cosine similarity analysis
@@ -295,6 +303,7 @@ def run_analysis(dataset_name, datasets):
 
             # Embedding norm
             norms, norm_results = calculate_norms(X, y)
+            #plot_norms(norms, y, dataset_name, encoder_name, embedding, output_dir)
 
             # Cosine similarity
             cosine_results = calculate_cosine_similarity(X, y)
@@ -368,9 +377,7 @@ def main():
 
     # Combine BGL and Liberty results
     combined_results = pd.concat(all_results, ignore_index=True)
-
     combined_output = Path("/content/drive/MyDrive/LogLLM/representation_analysis_all_results.csv")
-
     combined_results.to_csv(combined_output, index=False)
 
     print("\nAll representation analyses completed.")

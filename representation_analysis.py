@@ -114,10 +114,7 @@ def plot_norms(norms, y, dataset_name, encoder_name, embedding, output_dir):
     plt.close()
 '''
 
-# ============================================================
-# 5. Cosine similarity analysis
-# ============================================================
-
+# Cosine similarity analysis
 def sample_within_class_cosine(X_normalized, indices, max_pairs, rng):
     n_samples = len(indices)
     if n_samples < 2:

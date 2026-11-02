@@ -10,8 +10,6 @@ ENCODERS = ["author", "reproduced", "bert", "sbert", "bge", "qwen"]
 EMBEDDINGS = ["encoder", "projector"]
 
 RANDOM_SEED = 42
-MAX_COSINE_PAIRS = 100000
-SILHOUETTE_SAMPLE_SIZE = 5000
 
 def load_embeddings(dataset_name, encoder_name, embedding):
     data_dir = Path(f"/content/drive/MyDrive/LogLLM/{dataset_name}/representation_analysis")
@@ -197,19 +195,16 @@ def calculate_cosine_similarity(X, y):
 
     return results
 
-# 6. Silhouette score
+# Silhouette score
 def calculate_silhouette(X, y):
     unique_labels, counts = np.unique(y, return_counts=True)
     if len(unique_labels) < 2 or np.min(counts) < 2:
         return np.nan
 
-    sample_size = min(SILHOUETTE_SAMPLE_SIZE, len(X))
-
     score = silhouette_score(
         X,
         y,
         metric="cosine",
-        sample_size=sample_size if sample_size < len(X) else None,
         random_state=RANDOM_SEED
     )
 

@@ -170,30 +170,9 @@ def calculate_cosine_similarity(X, y):
 
     rng = np.random.default_rng(RANDOM_SEED)
 
-    # Normal-normal similarity
-    normal_normal = sample_within_class_cosine(
-        X_normalized,
-        normal_indices,
-        MAX_COSINE_PAIRS,
-        rng
-    )
-
-    # Anomalous-anomalous similarity
-    anomalous_anomalous = sample_within_class_cosine(
-        X_normalized,
-        anomalous_indices,
-        MAX_COSINE_PAIRS,
-        rng
-    )
-
-    # Normal-anomalous similarity
-    normal_anomalous = sample_between_class_cosine(
-        X_normalized,
-        normal_indices,
-        anomalous_indices,
-        MAX_COSINE_PAIRS,
-        rng
-    )
+    normal_normal = sample_within_class_cosine(X_normalized, normal_indices, MAX_COSINE_PAIRS, rng)
+    anomalous_anomalous = sample_within_class_cosine(X_normalized, anomalous_indices, MAX_COSINE_PAIRS, rng)
+    normal_anomalous = sample_between_class_cosine(X_normalized, normal_indices, anomalous_indices, MAX_COSINE_PAIRS, rng)
 
     results = {}
     results.update(cosine_summary(normal_normal, "normal_normal"))

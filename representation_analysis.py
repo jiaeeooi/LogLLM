@@ -241,11 +241,7 @@ def generate_umap(X, y, content, dataset_name, encoder_name, embedding, output_d
 
     return X_umap
 
-
-# ============================================================
-# 8. Run representation analysis
-# ============================================================
-
+# Run All Analyses
 def run_analysis(dataset_name, datasets):
     results = []
     output_dir = Path(f"/content/drive/MyDrive/LogLLM/{dataset_name}/representation_analysis")
@@ -259,7 +255,6 @@ def run_analysis(dataset_name, datasets):
             print("=" * 70)
 
             data = datasets[(encoder_name, embedding)]
-
             X = data["X"]
             y = data["y"]
             content = data["content"]
@@ -269,7 +264,7 @@ def run_analysis(dataset_name, datasets):
 
             # Embedding norm
             norms, norm_results = calculate_norms(X, y)
-            #plot_norms(norms, y, dataset_name, encoder_name, embedding, output_dir)
+            # plot_norms(norms, y, dataset_name, encoder_name, embedding, output_dir)
 
             # Cosine similarity
             cosine_results = calculate_cosine_similarity(X, y)
@@ -279,15 +274,7 @@ def run_analysis(dataset_name, datasets):
             print(f"Silhouette score: {silhouette:.4f}")
 
             # UMAP
-            X_umap = generate_umap(
-                X,
-                y,
-                content,
-                dataset_name,
-                encoder_name,
-                embedding,
-                output_dir
-            )
+            X_umap = generate_umap(X, y, content, dataset_name, encoder_name, embedding, output_dir)
 
             # Store results
             metrics = {
@@ -300,7 +287,6 @@ def run_analysis(dataset_name, datasets):
                 "num_anomalous": int(np.sum(y == 1)),
                 "silhouette_cosine": silhouette
             }
-
             metrics.update(norm_results)
             metrics.update(cosine_results)
 
@@ -319,11 +305,6 @@ def run_analysis(dataset_name, datasets):
     
     print(f"\nResults saved to:\n{output_csv}")
     return results_df
-
-
-# ============================================================
-# 9. Main
-# ============================================================
 
 def main():
     all_results = []
@@ -348,7 +329,6 @@ def main():
 
     print("\nAll representation analyses completed.")
     print(f"Combined results saved to:\n{combined_output}")
-
 
 if __name__ == "__main__":
     main()

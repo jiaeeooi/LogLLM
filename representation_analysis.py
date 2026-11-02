@@ -112,52 +112,39 @@ def plot_norms(norms, y, dataset_name, encoder_name, embedding, output_dir):
     plt.close()
 '''
 
-# Cosine similarity analysis
-def sample_within_class_cosine(X_normalized, indices, max_pairs, rng):
+# Calculate cosine similarities in batches to reduce RAM usage
+def calculate_pair_similarities(X_normalized, first_idx, second_idx, batch_size=2000):
+    similarities = np.empty(len(first_idx), dtype=np.float32)
+
+    for start in range(0, len(first_idx), batch_size):
+        end = min(start + batch_size, len(first_idx))
+        first = X_normalized[first_idx[start:end]]
+        second = X_normalized[second_idx[start:end]]
+
+        # Calculate row-wise dot products without creating another large array
+        similarities[start:end] = np.einsum("ij,ij->i", first, second)
+
+    return similarities
+
+def sample_within_class_cosine(X_normalized, indices):
     n_samples = len(indices)
     if n_samples < 2:
         return np.array([])
 
-    total_pairs = n_samples * (n_samples - 1) // 2
-    if total_pairs <= max_pairs:
-        first_idx, second_idx = np.triu_indices(n_samples, k=1)
-    else:
-        # Randomly sample unique pairs without replacement
-        pairs = set()
-        while len(pairs) < max_pairs:
-            first = rng.integers(0, n_samples)
-            second = rng.integers(0, n_samples)
-            if first != second:
-                pair = (min(first, second), max(first, second))
-                pairs.add(pair)
-        first_idx, second_idx = np.array(list(pairs)).T
+    first_idx, second_idx = np.triu_indices(n_samples, k=1)
+    first_idx = indices[first_idx]
+    second_idx = indices[second_idx]
 
-    first = X_normalized[indices[first_idx]]
-    second = X_normalized[indices[second_idx]]
+    return calculate_pair_similarities(X_normalized, first_idx, second_idx)
 
-    similarities = np.sum(first * second, axis=1)
-    return similarities
-
-def sample_between_class_cosine(X_normalized, indices_a, indices_b, max_pairs, rng):
+def sample_between_class_cosine(X_normalized, indices_a, indices_b):
     if len(indices_a) == 0 or len(indices_b) == 0:
         return np.array([])
 
-    total_pairs = len(indices_a) * len(indices_b)
+    first_idx = np.repeat(indices_a, len(indices_b))
+    second_idx = np.tile(indices_b, len(indices_a))
 
-    if total_pairs <= max_pairs:
-        first_idx = np.repeat(indices_a, len(indices_b))
-        second_idx = np.tile(indices_b, len(indices_a))
-    else:
-        # Randomly sample unique pairs without replacement
-        pairs = set()
-        while len(pairs) < max_pairs:
-            first = rng.choice(indices_a)
-            second = rng.choice(indices_b)
-            pairs.add((first, second))
-        first_idx, second_idx = np.array(list(pairs)).T
-
-    similarities = np.sum(X_normalized[first_idx] * X_normalized[second_idx], axis=1)
-    return similarities
+    return calculate_pair_similarities(X_normalized, first_idx, second_idx)
 
 def cosine_summary(similarities, name):
     if len(similarities) == 0:
@@ -173,20 +160,16 @@ def cosine_summary(similarities, name):
         f"{name}_cosine_median": np.median(similarities)
     }
 
-
 def calculate_cosine_similarity(X, y):
-    norms = np.linalg.norm(X, axis=1, keepdims=True) # Normalize each embedding to unit length
-
+    norms = np.linalg.norm(X, axis=1, keepdims=True)
     X_normalized = X / np.maximum(norms, 1e-12)
 
     normal_indices = np.where(y == 0)[0]
     anomalous_indices = np.where(y == 1)[0]
 
-    rng = np.random.default_rng(RANDOM_SEED)
-
-    normal_normal = sample_within_class_cosine(X_normalized, normal_indices, MAX_COSINE_PAIRS, rng)
-    anomalous_anomalous = sample_within_class_cosine(X_normalized, anomalous_indices, MAX_COSINE_PAIRS, rng)
-    normal_anomalous = sample_between_class_cosine(X_normalized, normal_indices, anomalous_indices, MAX_COSINE_PAIRS, rng)
+    normal_normal = sample_within_class_cosine(X_normalized, normal_indices)
+    anomalous_anomalous = sample_within_class_cosine(X_normalized, anomalous_indices)
+    normal_anomalous = sample_between_class_cosine(X_normalized, normal_indices, anomalous_indices)
 
     results = {}
     results.update(cosine_summary(normal_normal, "normal_normal"))

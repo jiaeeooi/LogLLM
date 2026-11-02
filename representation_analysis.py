@@ -119,31 +119,50 @@ def sample_within_class_cosine(X_normalized, indices, max_pairs, rng):
     n_samples = len(indices)
     if n_samples < 2:
         return np.array([])
-    n_pairs = min(max_pairs, n_samples * (n_samples - 1))
 
-    # Sample two different indices from the same class
-    first_idx = rng.integers(0, n_samples, size=n_pairs)
-    second_idx = rng.integers(0, n_samples - 1, size=n_pairs)
-    second_idx += (second_idx >= first_idx)
+    total_pairs = n_samples * (n_samples - 1) // 2
+    if total_pairs <= max_pairs:
+        first_idx, second_idx = np.triu_indices(n_samples, k=1)
+    else:
+        # Randomly sample unique pairs without replacement
+        pairs = set()
+        while len(pairs) < max_pairs:
+            first = rng.integers(0, n_samples)
+            second = rng.integers(0, n_samples)
+
+            if first != second:
+                pair = (min(first, second), max(first, second))
+                pairs.add(pair)
+
+        first_idx, second_idx = np.array(list(pairs)).T
 
     first = X_normalized[indices[first_idx]]
     second = X_normalized[indices[second_idx]]
+
     similarities = np.sum(first * second, axis=1)
-
     return similarities
-
 
 def sample_between_class_cosine(X_normalized, indices_a, indices_b, max_pairs, rng):
     if len(indices_a) == 0 or len(indices_b) == 0:
         return np.array([])
 
-    n_pairs = min(max_pairs, len(indices_a) * len(indices_b))
-    first_idx = rng.choice(indices_a, size=n_pairs, replace=True)
-    second_idx = rng.choice(indices_b, size=n_pairs, replace=True)
+    total_pairs = len(indices_a) * len(indices_b)
+
+    if total_pairs <= max_pairs:
+        first_idx = np.repeat(indices_a, len(indices_b))
+        second_idx = np.tile(indices_b, len(indices_a))
+    else:
+        # Randomly sample unique pairs without replacement
+        pairs = set()
+        while len(pairs) < max_pairs:
+            first = rng.choice(indices_a)
+            second = rng.choice(indices_b)
+            pairs.add((first, second))
+
+        first_idx, second_idx = np.array(list(pairs)).T
+
     similarities = np.sum(X_normalized[first_idx] * X_normalized[second_idx], axis=1)
-
     return similarities
-
 
 def cosine_summary(similarities, name):
     if len(similarities) == 0:

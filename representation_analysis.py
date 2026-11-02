@@ -197,11 +197,7 @@ def calculate_cosine_similarity(X, y):
 
     return results
 
-
-# ============================================================
 # 6. Silhouette score
-# ============================================================
-
 def calculate_silhouette(X, y):
     unique_labels, counts = np.unique(y, return_counts=True)
     if len(unique_labels) < 2 or np.min(counts) < 2:

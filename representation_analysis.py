@@ -113,7 +113,7 @@ def plot_norms(norms, y, dataset_name, encoder_name, embedding, output_dir):
 '''
 
 # Calculate cosine similarities in batches to reduce RAM usage
-def calculate_pair_similarities(X_normalized, first_idx, second_idx, batch_size=2000):
+def calculate_pair_similarities(X_normalized, first_idx, second_idx, batch_size=5000):
     similarities = np.empty(len(first_idx), dtype=np.float32)
 
     for start in range(0, len(first_idx), batch_size):

@@ -24,7 +24,7 @@ def load_embeddings(dataset_name, encoder_name, embedding):
         if missing_keys:
             raise ValueError(f"{file_path} is missing keys: {missing_keys}")
 
-        X = np.asarray(data["embeddings"], dtype=np.float64)
+        X = np.asarray(data["embeddings"], dtype=np.float32)
         y_raw = np.asarray(data["labels"])
         content = np.asarray(data["content"]).astype(str)
 
@@ -241,10 +241,11 @@ def generate_umap(X, y, content, dataset_name, encoder_name, embedding, output_d
 
     return X_umap
 
-# Run All Analyses
+# Run all analyses
 def run_analysis(dataset_name, datasets):
     results = []
     output_dir = Path(f"/content/drive/MyDrive/LogLLM/{dataset_name}/representation_analysis")
+    output_dir.mkdir(parents=True, exist_ok=True)
 
     for embedding in EMBEDDINGS:
         for encoder_name in ENCODERS:

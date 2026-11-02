@@ -129,11 +129,9 @@ def sample_within_class_cosine(X_normalized, indices, max_pairs, rng):
         while len(pairs) < max_pairs:
             first = rng.integers(0, n_samples)
             second = rng.integers(0, n_samples)
-
             if first != second:
                 pair = (min(first, second), max(first, second))
                 pairs.add(pair)
-
         first_idx, second_idx = np.array(list(pairs)).T
 
     first = X_normalized[indices[first_idx]]
@@ -158,7 +156,6 @@ def sample_between_class_cosine(X_normalized, indices_a, indices_b, max_pairs, r
             first = rng.choice(indices_a)
             second = rng.choice(indices_b)
             pairs.add((first, second))
-
         first_idx, second_idx = np.array(list(pairs)).T
 
     similarities = np.sum(X_normalized[first_idx] * X_normalized[second_idx], axis=1)

@@ -15,7 +15,7 @@ from sklearn.metrics import (
 )
 
 dataset_name = "BGL"
-embedding = "projector" # "encoder" or "projector"
+embedding = "encoder" # "encoder" or "projector"
 
 # -----------------------------------------------
 

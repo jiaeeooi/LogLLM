@@ -40,7 +40,7 @@ max_seq_len = 128
 
 data_path = "/content/drive/MyDrive/LogLLM/BGL/bgl_train.csv"
 #data_path = "/content/drive/MyDrive/LogLLM/Liberty/train.csv"
-seed = 42
+seed = 100
 
 min_less_portion = 0.3
 

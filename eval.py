@@ -29,7 +29,7 @@ batch_size = 16
 dataset_name = 'BGL'   # 'Thunderbird' 'HDFS_v1'  'BGL'  'Liberty'
 data_path = "/content/drive/MyDrive/LogLLM/BGL/bgl_test.csv"
 #data_path = "/content/drive/MyDrive/LogLLM/Liberty/test.csv"
-seed = 42
+seed = 100
 
 #output_path = f"/content/drive/MyDrive/LogLLM/{dataset_name}/test_preds_original.csv"
 #output_path = f"/content/drive/MyDrive/LogLLM/{dataset_name}/test_preds_reproduced.csv"

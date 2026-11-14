@@ -26,7 +26,7 @@ def set_seed(seed):
 max_content_len = 100
 max_seq_len = 128
 batch_size = 32
-dataset_name = 'BGL'   # 'Thunderbird' 'HDFS_v1'  'BGL'  'Liberty'
+dataset_name = 'Liberty'   # 'Thunderbird' 'HDFS_v1'  'BGL'  'Liberty'
 #data_path = "/content/drive/MyDrive/LogLLM/BGL/bgl_test.csv"
 data_path = "/content/drive/MyDrive/LogLLM/Liberty/test.csv"
 seed = 42

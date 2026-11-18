@@ -4,8 +4,8 @@ import numpy as np
 import torch
 from tqdm import tqdm
 from torch import nn
-from model import LogLLM
-#from bert_model import LogLLM
+#from model import LogLLM
+from bert_model import LogLLM
 #from sentencebert_model import LogLLM
 #from bge_model import LogLLM
 #from qwen_model import LogLLM
@@ -40,7 +40,7 @@ max_seq_len = 128
 
 #data_path = "/content/drive/MyDrive/LogLLM/BGL/bgl_train.csv"
 data_path = "/content/drive/MyDrive/LogLLM/Liberty/train.csv"
-seed = 100
+seed = 42
 
 min_less_portion = 0.3
 
@@ -53,9 +53,9 @@ Llama_path = "meta-llama/Meta-Llama-3-8B"
 ROOT_DIR = Path(__file__).parent
 #ft_path = os.path.join(ROOT_DIR, r"ft_model_{}".format(dataset_name))
 #ft_path = f"/content/drive/MyDrive/LogLLM/results/ft_model_{dataset_name}"
-ft_path = f"/content/drive/MyDrive/LogLLM/results/ft_model_{dataset_name}_{seed}"
+#ft_path = f"/content/drive/MyDrive/LogLLM/results/ft_model_{dataset_name}_{seed}"
 #ft_path = f"/content/drive/MyDrive/LogLLM/results/ft_model_{dataset_name}_bert"
-#ft_path = f"/content/drive/MyDrive/LogLLM/results/ft_model_{dataset_name}_bert_{seed}"
+ft_path = f"/content/drive/MyDrive/LogLLM/results/ft_model_{dataset_name}_bert_{seed}"
 #ft_path = f"/content/drive/MyDrive/LogLLM/results/ft_model_{dataset_name}_mpnet"
 #ft_path = f"/content/drive/MyDrive/LogLLM/results/ft_model_{dataset_name}_mpnet_{seed}"
 #ft_path = f"/content/drive/MyDrive/LogLLM/results/ft_model_{dataset_name}_bgem3"
